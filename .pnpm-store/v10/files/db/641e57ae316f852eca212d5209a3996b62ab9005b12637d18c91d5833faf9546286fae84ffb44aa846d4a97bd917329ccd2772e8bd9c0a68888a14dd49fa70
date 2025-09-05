@@ -1,0 +1,10 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MCP_GUARDS = void 0;
+exports.UseGuards = UseGuards;
+const common_1 = require("@nestjs/common");
+exports.MCP_GUARDS = '__mcp_guards__';
+function UseGuards(...guards) {
+    return (0, common_1.SetMetadata)(exports.MCP_GUARDS, guards);
+}
+//# sourceMappingURL=user-guard.decorator.js.map

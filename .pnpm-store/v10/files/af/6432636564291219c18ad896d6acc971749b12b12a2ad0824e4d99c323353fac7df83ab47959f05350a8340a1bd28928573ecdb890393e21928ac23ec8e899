@@ -1,0 +1,10 @@
+import { Request, Response } from 'express';
+import { McpLoggerService } from '../../services/logger.service';
+import { SseService } from './sse.service';
+export declare class SseController {
+    private readonly logger;
+    private readonly service;
+    constructor(logger: McpLoggerService, service: SseService);
+    handleSse(req: Request, res: Response): Promise<void>;
+    handleMessages(req: Request, res: Response): Promise<void>;
+}

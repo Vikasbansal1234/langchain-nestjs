@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PromptHandlerArgs = void 0;
+class PromptHandlerArgs {
+    args;
+    extra;
+    constructor(extra, args) {
+        this.extra = extra;
+        this.args = args;
+    }
+    static from(extra, args) {
+        return new PromptHandlerArgs(extra, args);
+    }
+}
+exports.PromptHandlerArgs = PromptHandlerArgs;
+//# sourceMappingURL=prompt.args.js.map

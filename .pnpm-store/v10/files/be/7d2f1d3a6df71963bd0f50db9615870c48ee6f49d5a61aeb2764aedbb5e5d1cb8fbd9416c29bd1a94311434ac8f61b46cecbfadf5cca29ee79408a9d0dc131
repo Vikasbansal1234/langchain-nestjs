@@ -1,0 +1,11 @@
+import { DynamicModule } from '@nestjs/common';
+import { McpFeatureOptions, McpModuleAsyncOptions, McpModuleOptions } from './mcp.types';
+export declare class McpCoreModule {
+    private static getActiveTransportControllersAndProviders;
+    private static buildServerConfig;
+    private static createAsyncOptionsProvider;
+    private static createAsyncProviders;
+    static forRoot(options: McpModuleOptions): DynamicModule;
+    static forRootAsync(options: McpModuleAsyncOptions): DynamicModule;
+    static forFeature(_options?: McpFeatureOptions): DynamicModule;
+}

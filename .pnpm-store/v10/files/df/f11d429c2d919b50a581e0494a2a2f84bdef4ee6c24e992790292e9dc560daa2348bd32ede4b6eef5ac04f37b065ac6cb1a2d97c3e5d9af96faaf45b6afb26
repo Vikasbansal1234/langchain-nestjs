@@ -1,0 +1,17 @@
+import { OnModuleInit } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { McpServerOptions } from '../../mcp.types';
+import { McpLoggerService } from '../../services/logger.service';
+import { RegistryService } from '../../services/registry.service';
+import { SessionManager } from '../../services/session.manager';
+export declare class SseService implements OnModuleInit {
+    private readonly options;
+    private readonly registry;
+    private readonly logger;
+    private readonly sessionManager;
+    private server;
+    constructor(options: McpServerOptions, registry: RegistryService, logger: McpLoggerService, sessionManager: SessionManager);
+    onModuleInit(): Promise<void>;
+    handleSse(req: Request, res: Response): Promise<void>;
+    handleMessage(req: Request, res: Response): Promise<void>;
+}

@@ -1,0 +1,18 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ResourceTemplateHandlerArgs = void 0;
+class ResourceTemplateHandlerArgs {
+    uri;
+    variables;
+    extra;
+    constructor(uri, extra, variables) {
+        this.uri = uri;
+        this.extra = extra;
+        this.variables = variables;
+    }
+    static from(uri, extra, variables) {
+        return new ResourceTemplateHandlerArgs(uri, extra, variables);
+    }
+}
+exports.ResourceTemplateHandlerArgs = ResourceTemplateHandlerArgs;
+//# sourceMappingURL=resource-template.args.js.map

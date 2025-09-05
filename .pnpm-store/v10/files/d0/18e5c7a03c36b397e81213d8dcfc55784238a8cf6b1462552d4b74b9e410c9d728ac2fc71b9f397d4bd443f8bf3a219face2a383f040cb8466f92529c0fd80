@@ -1,0 +1,8 @@
+import { z, ZodTypeAny } from 'zod';
+import { PromptArgsRawShape, RequestHandlerExtra } from '../mcp.types';
+export declare class PromptHandlerArgs<Args extends PromptArgsRawShape | undefined = undefined> {
+    readonly args?: Args extends PromptArgsRawShape ? z.objectOutputType<Args, ZodTypeAny> : undefined;
+    readonly extra: RequestHandlerExtra;
+    private constructor();
+    static from<Args extends PromptArgsRawShape | undefined>(extra: RequestHandlerExtra, args?: Args extends PromptArgsRawShape ? z.objectOutputType<Args, ZodTypeAny> : undefined): PromptHandlerArgs<Args>;
+}

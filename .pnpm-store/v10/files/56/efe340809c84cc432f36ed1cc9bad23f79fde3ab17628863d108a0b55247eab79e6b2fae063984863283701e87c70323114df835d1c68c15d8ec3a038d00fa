@@ -1,0 +1,16 @@
+import { LoggerService } from '@nestjs/common';
+import { McpLoggingOptions } from '../mcp.types';
+export declare class McpLoggerService implements LoggerService {
+    private readonly logger;
+    private readonly options;
+    constructor(options?: McpLoggingOptions);
+    debug(message: string, context?: string): void;
+    verbose(message: string, context?: string): void;
+    log(message: string, context?: string): void;
+    warn(message: string, context?: string): void;
+    error(message: string, trace?: string, context?: string): void;
+    isEnabled(): boolean;
+    getLevel(): string;
+    private formatContext;
+    private getLevelValue;
+}

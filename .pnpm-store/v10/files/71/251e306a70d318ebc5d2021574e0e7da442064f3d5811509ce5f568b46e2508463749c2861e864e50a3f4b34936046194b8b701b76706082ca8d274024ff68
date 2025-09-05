@@ -1,0 +1,19 @@
+import { OnModuleInit } from '@nestjs/common';
+import { Request, Response } from 'express';
+import { McpModuleTransportOptions, McpServerOptions } from '../../mcp.types';
+import { McpLoggerService } from '../../services/logger.service';
+import { RegistryService } from '../../services/registry.service';
+import { SessionManager } from '../../services/session.manager';
+export declare class StreamableService implements OnModuleInit {
+    private readonly options;
+    private readonly transportOptions;
+    private readonly registry;
+    private readonly logger;
+    private readonly sessionManager;
+    private server;
+    constructor(options: McpServerOptions, transportOptions: McpModuleTransportOptions, registry: RegistryService, logger: McpLoggerService, sessionManager: SessionManager);
+    onModuleInit(): Promise<void>;
+    handlePostRequest(req: Request, res: Response): Promise<void>;
+    handleGetRequest(req: Request, res: Response): Promise<void>;
+    handleDeleteRequest(req: Request, res: Response): Promise<void>;
+}

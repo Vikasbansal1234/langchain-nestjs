@@ -1,0 +1,18 @@
+export interface ResourceBaseOptions {
+    name: string;
+}
+export interface ResourceUriOptions extends ResourceBaseOptions {
+    uri: string;
+}
+export interface ResourceUriWithMetadataOptions extends ResourceUriOptions {
+    metadata: Record<string, any>;
+}
+export interface ResourceTemplateOptions extends ResourceBaseOptions {
+    template: string;
+}
+export interface ResourceTemplateWithMetadataOptions extends ResourceTemplateOptions {
+    metadata: Record<string, any>;
+}
+export type ResourceOptions = ResourceUriOptions | ResourceUriWithMetadataOptions | ResourceTemplateOptions | ResourceTemplateWithMetadataOptions;
+export declare const MCP_RESOURCE = "__mcp_resource__";
+export declare function Resource(options: ResourceOptions): (target: object, propertyKey: string, descriptor: PropertyDescriptor) => PropertyDescriptor;

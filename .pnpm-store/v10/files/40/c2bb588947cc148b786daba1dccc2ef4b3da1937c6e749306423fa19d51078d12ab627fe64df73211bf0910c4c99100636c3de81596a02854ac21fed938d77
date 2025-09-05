@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MCP_RESOURCE = void 0;
+exports.Resource = Resource;
+const common_1 = require("@nestjs/common");
+exports.MCP_RESOURCE = '__mcp_resource__';
+function Resource(options) {
+    return function (target, propertyKey, descriptor) {
+        (0, common_1.SetMetadata)(exports.MCP_RESOURCE, {
+            ...options,
+            methodName: propertyKey,
+        })(target, propertyKey, descriptor);
+        return descriptor;
+    };
+}
+//# sourceMappingURL=resource.decorator.js.map

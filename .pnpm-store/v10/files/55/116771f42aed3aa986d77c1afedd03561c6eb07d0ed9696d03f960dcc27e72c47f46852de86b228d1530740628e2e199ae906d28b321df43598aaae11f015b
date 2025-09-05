@@ -1,0 +1,2 @@
+export declare const MCP_RESOLVER = "__mcp_resolver__";
+export declare function Resolver(workspace?: string): ClassDecorator;

@@ -1,0 +1,191 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var McpCoreModule_1;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.McpCoreModule = void 0;
+const common_1 = require("@nestjs/common");
+const core_1 = require("@nestjs/core");
+const async_hooks_1 = require("async_hooks");
+const mcp_constants_1 = require("./mcp.constants");
+const discovery_service_1 = require("./services/discovery.service");
+const logger_service_1 = require("./services/logger.service");
+const registry_service_1 = require("./services/registry.service");
+const session_manager_1 = require("./services/session.manager");
+const sse_1 = require("./transports/sse");
+const streamable_1 = require("./transports/streamable");
+let McpCoreModule = McpCoreModule_1 = class McpCoreModule {
+    static getActiveTransportControllersAndProviders(transports) {
+        const controllers = new Set();
+        const providers = new Set();
+        const STREAMABLE_TRANSPORT = {
+            controller: streamable_1.StreamableController,
+            service: streamable_1.StreamableService,
+        };
+        const SSE_TRANSPORT = {
+            controller: sse_1.SseController,
+            service: sse_1.SseService,
+        };
+        const defaultTransports = {
+            streamable: { enabled: true },
+            sse: { enabled: true },
+        };
+        const config = {
+            streamable: {
+                ...defaultTransports.streamable,
+                ...(transports?.streamable ?? {}),
+            },
+            sse: {
+                ...defaultTransports.sse,
+                ...(transports?.sse ?? {}),
+            },
+        };
+        if (config.streamable.enabled) {
+            controllers.add(STREAMABLE_TRANSPORT.controller);
+            providers.add(STREAMABLE_TRANSPORT.service);
+        }
+        if (config.sse.enabled) {
+            controllers.add(SSE_TRANSPORT.controller);
+            providers.add(SSE_TRANSPORT.service);
+        }
+        return {
+            controllers: Array.from(controllers),
+            providers: Array.from(providers),
+        };
+    }
+    static buildServerConfig(options) {
+        const serverInfo = {
+            name: options.name,
+            version: options.version,
+        };
+        const serverOptions = {
+            instructions: options?.instructions,
+            capabilities: options?.capabilities,
+            ...(options?.protocolOptions || {}),
+        };
+        const loggingOptions = {
+            enabled: options.logging?.enabled !== false,
+            level: options.logging?.level || 'verbose',
+        };
+        return { serverInfo, serverOptions, loggingOptions };
+    }
+    static createAsyncOptionsProvider(options) {
+        return {
+            provide: mcp_constants_1.MCP_MODULE_OPTIONS,
+            useFactory: options.useFactory,
+            inject: options.inject || [],
+        };
+    }
+    static createAsyncProviders(options) {
+        return [
+            this.createAsyncOptionsProvider(options),
+            {
+                provide: mcp_constants_1.MCP_LOGGING_OPTIONS,
+                useFactory: (mcpOptions) => ({
+                    enabled: mcpOptions.logging?.enabled !== false,
+                    level: mcpOptions.logging?.level || 'verbose',
+                }),
+                inject: [mcp_constants_1.MCP_MODULE_OPTIONS],
+            },
+            {
+                provide: mcp_constants_1.MCP_TRANSPORT_OPTIONS,
+                useFactory: (mcpOptions) => mcpOptions.transports,
+                inject: [mcp_constants_1.MCP_MODULE_OPTIONS],
+            },
+            {
+                provide: 'MCP_SERVER_OPTIONS',
+                useFactory: (mcpOptions) => {
+                    const { serverInfo, serverOptions, loggingOptions } = McpCoreModule_1.buildServerConfig(mcpOptions);
+                    return {
+                        serverInfo,
+                        options: serverOptions,
+                        logging: loggingOptions,
+                    };
+                },
+                inject: [mcp_constants_1.MCP_MODULE_OPTIONS],
+            },
+        ];
+    }
+    static forRoot(options) {
+        const imports = options.imports || [];
+        const { controllers, providers } = this.getActiveTransportControllersAndProviders(options.transports);
+        const allProviders = [...(options.providers || []), ...providers];
+        const { serverInfo, serverOptions, loggingOptions } = this.buildServerConfig(options);
+        return {
+            module: McpCoreModule_1,
+            imports,
+            controllers,
+            providers: [
+                ...allProviders,
+                {
+                    provide: 'MCP_SERVER_OPTIONS',
+                    useValue: {
+                        serverInfo,
+                        options: serverOptions,
+                        logging: loggingOptions,
+                    },
+                },
+                {
+                    provide: 'MCP_LOGGING_OPTIONS',
+                    useValue: loggingOptions,
+                },
+                {
+                    provide: 'MCP_TRANSPORT_OPTIONS',
+                    useValue: options.transports,
+                },
+            ],
+            global: true,
+        };
+    }
+    static forRootAsync(options) {
+        const { imports = [] } = options;
+        const asyncProviders = this.createAsyncProviders(options);
+        const defaultControllers = McpCoreModule_1.getActiveTransportControllersAndProviders().controllers;
+        const defaultProviders = McpCoreModule_1.getActiveTransportControllersAndProviders().providers;
+        return {
+            module: McpCoreModule_1,
+            imports,
+            controllers: defaultControllers,
+            providers: [
+                ...asyncProviders,
+                registry_service_1.RegistryService,
+                discovery_service_1.DiscoveryService,
+                logger_service_1.McpLoggerService,
+                session_manager_1.SessionManager,
+                {
+                    provide: async_hooks_1.AsyncLocalStorage,
+                    useValue: new async_hooks_1.AsyncLocalStorage(),
+                },
+                ...defaultProviders,
+            ],
+            global: true,
+        };
+    }
+    static forFeature(_options) {
+        return {
+            module: McpCoreModule_1,
+        };
+    }
+};
+exports.McpCoreModule = McpCoreModule;
+exports.McpCoreModule = McpCoreModule = McpCoreModule_1 = __decorate([
+    (0, common_1.Module)({
+        imports: [core_1.DiscoveryModule],
+        providers: [
+            registry_service_1.RegistryService,
+            discovery_service_1.DiscoveryService,
+            {
+                provide: async_hooks_1.AsyncLocalStorage,
+                useValue: new async_hooks_1.AsyncLocalStorage(),
+            },
+            logger_service_1.McpLoggerService,
+            session_manager_1.SessionManager,
+        ],
+        exports: [session_manager_1.SessionManager],
+    })
+], McpCoreModule);
+//# sourceMappingURL=mcp-core.module.js.map

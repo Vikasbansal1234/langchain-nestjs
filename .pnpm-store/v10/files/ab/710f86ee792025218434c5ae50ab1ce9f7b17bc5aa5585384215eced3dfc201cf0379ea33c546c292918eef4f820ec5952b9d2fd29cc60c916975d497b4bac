@@ -1,0 +1,2 @@
+export declare const MCP_GUARDS = "__mcp_guards__";
+export declare function UseGuards(...guards: any[]): ClassDecorator & MethodDecorator;

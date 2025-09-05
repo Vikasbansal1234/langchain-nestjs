@@ -1,0 +1,270 @@
+{
+  "messages": [
+    {
+      "lc": 1,
+      "type": "constructor",
+      "id": [
+        "langchain_core",
+        "messages",
+        "HumanMessage"
+      ],
+      "kwargs": {
+        "content": "What is the weather in Delhi?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "id": "a56a920b-b9af-4a02-b6c5-4ae40b71d1de"
+      }
+    },
+    {
+      "lc": 1,
+      "type": "constructor",
+      "id": [
+        "langchain_core",
+        "messages",
+        "HumanMessage"
+      ],
+      "kwargs": {
+        "content": "Add 10 and 15.",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "id": "5d2514a8-9ad7-4d3f-80e0-c613891c5301"
+      }
+    },
+    {
+      "lc": 1,
+      "type": "constructor",
+      "id": [
+        "langchain_core",
+        "messages",
+        "HumanMessage"
+      ],
+      "kwargs": {
+        "content": "What time is it right now?",
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "id": "a5d82a57-0bb9-473f-a11a-88cf228c996a"
+      }
+    },
+    {
+      "lc": 1,
+      "type": "constructor",
+      "id": [
+        "langchain_core",
+        "messages",
+        "AIMessage"
+      ],
+      "kwargs": {
+        "content": "",
+        "additional_kwargs": {
+          "tool_calls": [
+            {
+              "id": "call_IAnjFAFjX2PxIDyxUIvKyUnB",
+              "type": "function",
+              "function": {
+                "name": "get_weather",
+                "arguments": "{\"location\": \"Delhi\"}"
+              }
+            },
+            {
+              "id": "call_WGXDUW711gBYZmGXLX62jwcQ",
+              "type": "function",
+              "function": {
+                "name": "add_numbers",
+                "arguments": "{\"a\": 10, \"b\": 15}"
+              }
+            },
+            {
+              "id": "call_dTnA0bBPSxQ3pNoLhzjhEvqE",
+              "type": "function",
+              "function": {
+                "name": "get_time",
+                "arguments": "{}"
+              }
+            }
+          ]
+        },
+        "response_metadata": {
+          "tokenUsage": {
+            "promptTokens": 112,
+            "completionTokens": 60,
+            "totalTokens": 172
+          },
+          "finish_reason": "tool_calls",
+          "model_name": "gpt-4o-2024-08-06",
+          "usage": {
+            "prompt_tokens": 112,
+            "completion_tokens": 60,
+            "total_tokens": 172,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "audio_tokens": 0,
+              "accepted_prediction_tokens": 0,
+              "rejected_prediction_tokens": 0
+            }
+          },
+          "system_fingerprint": "fp_46bff0e0c8"
+        },
+        "id": "chatcmpl-C9B71vTbC1wzuo0TlVzPSl7Od017D",
+        "tool_calls": [
+          {
+            "name": "get_weather",
+            "args": {
+              "location": "Delhi"
+            },
+            "type": "tool_call",
+            "id": "call_IAnjFAFjX2PxIDyxUIvKyUnB"
+          },
+          {
+            "name": "add_numbers",
+            "args": {
+              "a": 10,
+              "b": 15
+            },
+            "type": "tool_call",
+            "id": "call_WGXDUW711gBYZmGXLX62jwcQ"
+          },
+          {
+            "name": "get_time",
+            "args": {},
+            "type": "tool_call",
+            "id": "call_dTnA0bBPSxQ3pNoLhzjhEvqE"
+          }
+        ],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "output_tokens": 60,
+          "input_tokens": 112,
+          "total_tokens": 172,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      }
+    },
+    {
+      "lc": 1,
+      "type": "constructor",
+      "id": [
+        "langchain_core",
+        "messages",
+        "ToolMessage"
+      ],
+      "kwargs": {
+        "status": "success",
+        "content": "Mock weather in Delhi: sunny, 25°C.",
+        "tool_call_id": "call_IAnjFAFjX2PxIDyxUIvKyUnB",
+        "name": "get_weather",
+        "metadata": {},
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "id": "b039269b-38fd-4b74-ac6e-26440925533e"
+      }
+    },
+    {
+      "lc": 1,
+      "type": "constructor",
+      "id": [
+        "langchain_core",
+        "messages",
+        "ToolMessage"
+      ],
+      "kwargs": {
+        "status": "success",
+        "content": "The sum of 10 + 15 = 25",
+        "tool_call_id": "call_WGXDUW711gBYZmGXLX62jwcQ",
+        "name": "add_numbers",
+        "metadata": {},
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "id": "a59f893a-7ea5-4b39-b1b1-7593ce6d1e89"
+      }
+    },
+    {
+      "lc": 1,
+      "type": "constructor",
+      "id": [
+        "langchain_core",
+        "messages",
+        "ToolMessage"
+      ],
+      "kwargs": {
+        "status": "success",
+        "content": "Current time is 2025-08-27T14:08:24.632Z",
+        "tool_call_id": "call_dTnA0bBPSxQ3pNoLhzjhEvqE",
+        "name": "get_time",
+        "metadata": {},
+        "additional_kwargs": {},
+        "response_metadata": {},
+        "id": "5c74414a-c0c8-42f4-ab90-a645d62a7753"
+      }
+    },
+    {
+      "lc": 1,
+      "type": "constructor",
+      "id": [
+        "langchain_core",
+        "messages",
+        "AIMessage"
+      ],
+      "kwargs": {
+        "content": "- The weather in Delhi is sunny, with a temperature of 25°C.\n- The sum of 10 and 15 is 25.\n- The current time is 14:08 (2:08 PM) UTC on August 27, 2025.",
+        "additional_kwargs": {},
+        "response_metadata": {
+          "tokenUsage": {
+            "promptTokens": 232,
+            "completionTokens": 55,
+            "totalTokens": 287
+          },
+          "finish_reason": "stop",
+          "model_name": "gpt-4o-2024-08-06",
+          "usage": {
+            "prompt_tokens": 232,
+            "completion_tokens": 55,
+            "total_tokens": 287,
+            "prompt_tokens_details": {
+              "cached_tokens": 0,
+              "audio_tokens": 0
+            },
+            "completion_tokens_details": {
+              "reasoning_tokens": 0,
+              "audio_tokens": 0,
+              "accepted_prediction_tokens": 0,
+              "rejected_prediction_tokens": 0
+            }
+          },
+          "system_fingerprint": "fp_46bff0e0c8"
+        },
+        "id": "chatcmpl-C9B72rKrtagxMBWf4lkBOtphVvfgw",
+        "tool_calls": [],
+        "invalid_tool_calls": [],
+        "usage_metadata": {
+          "output_tokens": 55,
+          "input_tokens": 232,
+          "total_tokens": 287,
+          "input_token_details": {
+            "audio": 0,
+            "cache_read": 0
+          },
+          "output_token_details": {
+            "audio": 0,
+            "reasoning": 0
+          }
+        }
+      }
+    }
+  ],
+  "structuredResponse": {
+    "answer": "- The weather in Delhi is sunny, with a temperature of 25°C.\n- The sum of 10 and 15 is 25.\n- The current time is 14:08 (2:08 PM) UTC on August 27, 2025.",
+    "source": "Mock weather in Delhi: sunny, 25°C.\nThe sum of 10 + 15 = 25\nCurrent time is 2025-08-27T14:08:24.632Z",
+    "timestamp": "2025-08-27T14:08:24.632Z"
+  }
+}

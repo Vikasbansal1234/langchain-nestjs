@@ -1,0 +1,30 @@
+import { ToolAnnotations } from '@modelcontextprotocol/sdk/types';
+import { ZodRawShape } from 'zod';
+export interface ToolBaseOptions {
+    name: string;
+}
+export interface ToolWithDescriptionOptions extends ToolBaseOptions {
+    description: string;
+}
+export interface ToolWithParamsSchemaOptions extends ToolBaseOptions {
+    paramsSchema: ZodRawShape;
+}
+export interface ToolWithParamsSchemaAndDescriptionOptions extends ToolWithParamsSchemaOptions {
+    description: string;
+}
+export interface ToolWithAnnotationsOptions extends ToolBaseOptions {
+    annotations: ToolAnnotations;
+}
+export interface ToolWithAnnotationsAndDescriptionOptions extends ToolWithAnnotationsOptions {
+    description: string;
+}
+export interface ToolWithParamsSchemaAndAnnotationsOptions extends ToolBaseOptions {
+    paramsSchema: ZodRawShape;
+    annotations: ToolAnnotations;
+}
+export interface ToolWithParamsSchemaAndAnnotationsAndDescriptionOptions extends ToolWithParamsSchemaAndAnnotationsOptions {
+    description: string;
+}
+export type ToolOptions = ToolBaseOptions | ToolWithDescriptionOptions | ToolWithParamsSchemaOptions | ToolWithParamsSchemaAndDescriptionOptions | ToolWithAnnotationsOptions | ToolWithAnnotationsAndDescriptionOptions | ToolWithParamsSchemaAndAnnotationsOptions | ToolWithParamsSchemaAndAnnotationsAndDescriptionOptions;
+export declare const MCP_TOOL = "__mcp_tool__";
+export declare function Tool(options: ToolOptions): (target: object, propertyKey: string, descriptor: PropertyDescriptor) => PropertyDescriptor;

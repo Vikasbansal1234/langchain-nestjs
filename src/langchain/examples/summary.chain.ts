@@ -7,9 +7,14 @@ import {
   ParserKind,
 } from '../enums/lc.enums';
 import { z } from 'zod';
+import { Runnable, RunnableConfig } from "@langchain/core/runnables";
 
 @Injectable()
-export class SummaryChain {
+export class SummaryChain extends Runnable {
+  invoke(input: any, options?: Partial<RunnableConfig<Record<string, any>>> | undefined): Promise<any> {
+    throw new Error('Method not implemented.');
+  }
+  lc_namespace: string[];
   @LC.Model({
     provider: Provider.OpenAI,
     kind: ModelKind.Chat,

@@ -1,0 +1,93 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SseService = void 0;
+const mcp_js_1 = require("@modelcontextprotocol/sdk/server/mcp.js");
+const sse_js_1 = require("@modelcontextprotocol/sdk/server/sse.js");
+const common_1 = require("@nestjs/common");
+const logger_service_1 = require("../../services/logger.service");
+const registry_service_1 = require("../../services/registry.service");
+const session_manager_1 = require("../../services/session.manager");
+let SseService = class SseService {
+    options;
+    registry;
+    logger;
+    sessionManager;
+    server;
+    constructor(options, registry, logger, sessionManager) {
+        this.options = options;
+        this.registry = registry;
+        this.logger = logger;
+        this.sessionManager = sessionManager;
+        this.server = new mcp_js_1.McpServer(this.options.serverInfo, this.options.options);
+    }
+    async onModuleInit() {
+        this.logger.log('Starting MCP controller registration', 'MCP_SERVER');
+        await this.registry.registerAll(this.server);
+        this.logger.log('MCP initialization completed', 'MCP_SERVER');
+    }
+    async handleSse(req, res) {
+        const transport = new sse_js_1.SSEServerTransport('/messages', res);
+        this.sessionManager.setSession(transport.sessionId, {
+            transport,
+            request: req,
+        });
+        this.logger.debug(`Starting SSE for sessionId: ${transport.sessionId}`, 'api');
+        res.on('close', () => {
+            this.sessionManager.deleteSession(transport.sessionId);
+        });
+        await this.server.connect(transport);
+    }
+    async handleMessage(req, res) {
+        const sessionId = req.query.sessionId;
+        const session = this.sessionManager.getSession(sessionId);
+        if (!session) {
+            res.status(400).send('Invalid or missing sessionId');
+            return;
+        }
+        this.logger.debug(`Receiving SSE message for sessionId: ${sessionId}`, 'api');
+        this.logger.debug(`SSE message: ${JSON.stringify(req.body)}`, 'MCP_SERVER');
+        const transport = session.transport;
+        if (!(transport instanceof sse_js_1.SSEServerTransport)) {
+            res.status(400).send('Invalid transport');
+            return;
+        }
+        try {
+            if (transport) {
+                await transport.handlePostMessage(req, res, req.body);
+            }
+            else {
+                res.status(400).send('No transport found for sessionId');
+            }
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            this.logger.error('Error al manejar mensaje SSE', errorMessage, 'MCP_SERVER');
+            res.status(500).send({
+                statusCode: 500,
+                error: 'Internal Server Error',
+                message: errorMessage,
+            });
+        }
+    }
+};
+exports.SseService = SseService;
+exports.SseService = SseService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, common_1.Inject)('MCP_SERVER_OPTIONS')),
+    __metadata("design:paramtypes", [Object, registry_service_1.RegistryService,
+        logger_service_1.McpLoggerService,
+        session_manager_1.SessionManager])
+], SseService);
+//# sourceMappingURL=sse.service.js.map

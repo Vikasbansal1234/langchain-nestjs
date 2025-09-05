@@ -1,0 +1,7 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MCP_TRANSPORT_OPTIONS = exports.MCP_LOGGING_OPTIONS = exports.MCP_MODULE_OPTIONS = void 0;
+exports.MCP_MODULE_OPTIONS = 'MCP_MODULE_OPTIONS';
+exports.MCP_LOGGING_OPTIONS = 'MCP_LOGGING_OPTIONS';
+exports.MCP_TRANSPORT_OPTIONS = 'MCP_TRANSPORT_OPTIONS';
+//# sourceMappingURL=mcp.constants.js.map

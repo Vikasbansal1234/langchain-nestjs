@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MCP_PROMPT = void 0;
+exports.Prompt = Prompt;
+const common_1 = require("@nestjs/common");
+exports.MCP_PROMPT = '__mcp_prompt__';
+function Prompt(options) {
+    return function (target, propertyKey, descriptor) {
+        (0, common_1.SetMetadata)(exports.MCP_PROMPT, {
+            ...options,
+            methodName: propertyKey,
+        })(target, propertyKey, descriptor);
+        return descriptor;
+    };
+}
+//# sourceMappingURL=prompt.decorator.js.map

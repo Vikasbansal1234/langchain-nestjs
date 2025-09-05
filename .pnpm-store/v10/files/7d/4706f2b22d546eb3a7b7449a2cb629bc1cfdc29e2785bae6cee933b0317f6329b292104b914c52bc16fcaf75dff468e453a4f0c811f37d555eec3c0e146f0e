@@ -1,0 +1,142 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.StreamableService = void 0;
+const mcp_js_1 = require("@modelcontextprotocol/sdk/server/mcp.js");
+const streamableHttp_js_1 = require("@modelcontextprotocol/sdk/server/streamableHttp.js");
+const types_js_1 = require("@modelcontextprotocol/sdk/types.js");
+const common_1 = require("@nestjs/common");
+const crypto_1 = require("crypto");
+const logger_service_1 = require("../../services/logger.service");
+const registry_service_1 = require("../../services/registry.service");
+const session_manager_1 = require("../../services/session.manager");
+let StreamableService = class StreamableService {
+    options;
+    transportOptions;
+    registry;
+    logger;
+    sessionManager;
+    server;
+    constructor(options, transportOptions, registry, logger, sessionManager) {
+        this.options = options;
+        this.transportOptions = transportOptions;
+        this.registry = registry;
+        this.logger = logger;
+        this.sessionManager = sessionManager;
+        this.server = new mcp_js_1.McpServer(this.options.serverInfo, this.options.options);
+    }
+    async onModuleInit() {
+        await this.registry.registerAll(this.server);
+        this.logger.log('MCP STREAMEABLE initialization completed');
+    }
+    async handlePostRequest(req, res) {
+        const sessionId = req.headers['mcp-session-id'];
+        let transport;
+        const { options } = this.transportOptions?.streamable || {};
+        if (sessionId && this.sessionManager.getSession(sessionId)) {
+            const session = this.sessionManager.getSession(sessionId);
+            if (!session) {
+                throw new Error('Session not found');
+            }
+            if (!(session.transport instanceof streamableHttp_js_1.StreamableHTTPServerTransport)) {
+                throw new Error('Invalid transport');
+            }
+            transport = session.transport;
+        }
+        else if (!sessionId && (0, types_js_1.isInitializeRequest)(req.body)) {
+            transport = new streamableHttp_js_1.StreamableHTTPServerTransport({
+                sessionIdGenerator: () => options?.sessionIdGenerator?.() || (0, crypto_1.randomUUID)(),
+                onsessioninitialized: (sessionId) => {
+                    this.sessionManager.setSession(sessionId, {
+                        transport,
+                        request: req,
+                    });
+                },
+                enableJsonResponse: options?.enableJsonResponse,
+                eventStore: options?.eventStore,
+            });
+            transport.onclose = () => {
+                if (transport.sessionId) {
+                    this.sessionManager.deleteSession(transport.sessionId);
+                }
+            };
+            await this.server.connect(transport);
+        }
+        else {
+            res.status(400).json({
+                jsonrpc: '2.0',
+                error: {
+                    code: -32000,
+                    message: 'Bad Request: No valid session ID provided',
+                },
+                id: null,
+            });
+            return;
+        }
+        await transport.handleRequest(req, res, req.body);
+    }
+    async handleGetRequest(req, res) {
+        const sessionId = req.headers['mcp-session-id'];
+        if (!sessionId || !this.sessionManager.getSession(sessionId)) {
+            res.status(400).send('Invalid or missing session ID');
+            return;
+        }
+        const session = this.sessionManager.getSession(sessionId);
+        if (!session) {
+            throw new Error('Session not found');
+        }
+        const { transport } = session;
+        if (!(transport instanceof streamableHttp_js_1.StreamableHTTPServerTransport)) {
+            throw new Error('Invalid transport');
+        }
+        await transport.handleRequest(req, res);
+    }
+    async handleDeleteRequest(req, res) {
+        const sessionId = req.headers['mcp-session-id'];
+        if (!sessionId) {
+            res.status(400).json({ error: 'Missing sessionId' });
+            return;
+        }
+        const session = this.sessionManager.getSession(sessionId);
+        if (!session) {
+            throw new Error('Session not found');
+        }
+        const { transport } = session;
+        if (transport) {
+            this.logger.debug(`Closing streamable transport for sessionId: ${sessionId}`, 'STREAMABLE');
+            await transport.close();
+            const uuidV4Regex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+            if (!uuidV4Regex.test(sessionId)) {
+                res.status(400).json({ error: 'Invalid sessionId format' });
+                return;
+            }
+            this.sessionManager.deleteSession(sessionId);
+            res.status(200).json({ success: true, sessionId });
+        }
+        else {
+            this.logger.debug(`No streamable transport found for sessionId: ${sessionId}`, 'STREAMABLE');
+            res.status(404).json({ error: 'Transport not found', sessionId });
+        }
+    }
+};
+exports.StreamableService = StreamableService;
+exports.StreamableService = StreamableService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, common_1.Inject)('MCP_SERVER_OPTIONS')),
+    __param(1, (0, common_1.Inject)('MCP_TRANSPORT_OPTIONS')),
+    __metadata("design:paramtypes", [Object, Object, registry_service_1.RegistryService,
+        logger_service_1.McpLoggerService,
+        session_manager_1.SessionManager])
+], StreamableService);
+//# sourceMappingURL=streamable.service.js.map

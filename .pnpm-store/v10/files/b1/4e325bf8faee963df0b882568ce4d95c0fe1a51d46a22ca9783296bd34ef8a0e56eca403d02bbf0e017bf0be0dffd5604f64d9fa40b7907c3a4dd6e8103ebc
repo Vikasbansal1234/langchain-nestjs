@@ -1,0 +1,83 @@
+{
+  "name": "checkpoint-redis",
+  "version": "0.1.0",
+  "description": "langchain redis checkpoint saver",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "glob -c \"tsx --test \" \"src/**/*.test.ts\"",
+    "clean": "rm -rf dist",
+    "build": "npm run clean && tsc",
+    "prepack": "npm run build",
+    "prepare": "npm run build",
+    "typecheck": "tsc --noEmit",
+    "lint": "npm run lint:eslint && npm run lint:dpdm",
+    "lint:eslint": "NODE_OPTIONS=--max-old-space-size=4096 eslint --cache --ext .ts,.js src/",
+    "lint:dpdm": "dpdm --exit-code circular:1 --no-warning --no-tree src/*.ts src/**/*.ts",
+    "format": "prettier --config .prettierrc --write \"src\"",
+    "format:check": "prettier --config .prettierrc --check \"src\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/levivoelz/checkpoint-redis.git"
+  },
+  "keywords": [
+    "langchain",
+    "langgraph",
+    "redis",
+    "checkpoint",
+    "redis-saver"
+  ],
+  "author": "Levi Voelz <levi@hatchmatter.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/levivoelz/checkpoint-redis/issues"
+  },
+  "homepage": "https://github.com/levivoelz/checkpoint-redis#readme",
+  "peerDependencies": {
+    "@langchain/core": ">=0.2.31 <0.4.0",
+    "@langchain/langgraph-checkpoint": "^0.0.6",
+    "ioredis": ">=5.0.0"
+  },
+  "devDependencies": {
+    "@langchain/langgraph-checkpoint": "^0.0.6",
+    "@tsconfig/recommended": "^1.0.3",
+    "@types/ioredis-mock": "^8.2.5",
+    "@types/node": "^22.5.0",
+    "@typescript-eslint/eslint-plugin": "^6.12.0",
+    "@typescript-eslint/parser": "^6.12.0",
+    "dpdm": "^3.12.0",
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-jest": "^28.8.0",
+    "eslint-plugin-no-instanceof": "^1.0.1",
+    "eslint-plugin-prettier": "^4.2.1",
+    "glob": "^11.0.0",
+    "ioredis-mock": "^8.9.0",
+    "prettier": "^2.8.3",
+    "tsx": "^4.17.0",
+    "typescript": "^5.6.2"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src"
+  ]
+}
+

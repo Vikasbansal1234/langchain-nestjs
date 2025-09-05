@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MCP_RESOLVER = void 0;
+exports.Resolver = Resolver;
+const common_1 = require("@nestjs/common");
+const common_2 = require("@nestjs/common");
+exports.MCP_RESOLVER = '__mcp_resolver__';
+function Resolver(workspace) {
+    return function (target) {
+        (0, common_1.Injectable)()(target);
+        (0, common_2.SetMetadata)(exports.MCP_RESOLVER, workspace || true)(target);
+    };
+}
+//# sourceMappingURL=resolver.decorator.js.map

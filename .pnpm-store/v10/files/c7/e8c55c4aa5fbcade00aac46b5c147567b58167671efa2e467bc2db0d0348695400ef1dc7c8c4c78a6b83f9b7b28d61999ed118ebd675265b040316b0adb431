@@ -1,0 +1,8 @@
+import { z, ZodRawShape, ZodTypeAny } from 'zod';
+import { RequestHandlerExtra } from '../mcp.types';
+export declare class ToolHandlerArgs<Args extends ZodRawShape | undefined = undefined> {
+    readonly args?: Args extends ZodRawShape ? z.objectOutputType<Args, ZodTypeAny> : undefined;
+    readonly extra: RequestHandlerExtra;
+    private constructor();
+    static from<Args extends ZodRawShape | undefined>(extra: RequestHandlerExtra, args?: Args extends ZodRawShape ? z.objectOutputType<Args, ZodTypeAny> : undefined): ToolHandlerArgs<Args>;
+}

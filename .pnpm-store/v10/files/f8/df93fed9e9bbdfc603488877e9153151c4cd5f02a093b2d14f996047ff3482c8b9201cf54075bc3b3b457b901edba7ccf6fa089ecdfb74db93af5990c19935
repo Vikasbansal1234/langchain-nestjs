@@ -1,0 +1,15 @@
+import { PromptArgsRawShape } from '../mcp.types';
+export interface PromptBaseOptions {
+    name: string;
+}
+export interface PromptWithDescriptionOptions extends PromptBaseOptions {
+    description: string;
+}
+export interface PromptWithArgsSchemaOptions extends PromptBaseOptions {
+    argsSchema: PromptArgsRawShape;
+}
+export interface PromptWithDescriptionAndArgsSchemaOptions extends PromptWithDescriptionOptions, PromptWithArgsSchemaOptions {
+}
+export type PromptOptions = PromptBaseOptions | PromptWithDescriptionOptions | PromptWithArgsSchemaOptions | PromptWithDescriptionAndArgsSchemaOptions;
+export declare const MCP_PROMPT = "__mcp_prompt__";
+export declare function Prompt(options: PromptOptions): (target: object, propertyKey: string, descriptor: PropertyDescriptor) => PropertyDescriptor;

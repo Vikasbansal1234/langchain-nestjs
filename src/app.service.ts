@@ -1,8 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { SummaryChain } from './langchain/examples/summary.chain';
-import { ChatOpenAI } from '@langchain/openai';
-import { tool } from '@langchain/core/tools';
-import { z } from 'zod';
 import {
   JokeJsonOutputParserService,
   JokeJsonOutputToolsParserService,
@@ -11,6 +8,8 @@ import {
 
 @Injectable()
 export class AppService {
+  private readonly logger = new Logger(AppService.name);
+
   constructor(
     private readonly summaryChain: SummaryChain,
     private readonly jokeJsonOutputService: JokeJsonOutputParserService,
@@ -19,65 +18,87 @@ export class AppService {
   ) {}
 
   getHello(): string {
-    return 'Hello World!';
+    this.logger.log('getHello called');
+  
+    try {
+      // Simulate error for testing logs
+      throw new Error('💥 Simulated error from getHello');
+    } catch (error: any) {
+      this.logger.error('getHello failed', error.stack, 'getHello');
+      throw error; // optional: or return a fallback response
+    }
   }
 
   async summarizeText(text: string): Promise<any> {
+    const start = Date.now();
+    this.logger.log('Summarize start', { op: 'summarizeText', textLen: text?.length ?? 0 });
+
     try {
-      console.log('📝 AppService: Processing text summarization...');
       const result = await this.summaryChain.summarize(text);
-      console.log('✅ AppService: Summarization completed');
+      this.logger.log('Summarize success', { op: 'summarizeText', ms: Date.now() - start });
       return result;
-    } catch (error) {
-      console.error('❌ AppService: Summarization failed:', error);
+    } catch (error: any) {
+      this.logger.error('Summarize failed', error?.stack, 'summarizeText');
+      // optional: include duration for failures too
+      this.logger.warn('Summarize failure timing', { op: 'summarizeText', ms: Date.now() - start });
       throw error;
     }
   }
 
-  // Method to test JsonOutputParser service
+  // JsonOutputParser
   async tellJokeWithJsonOutput(topic: string): Promise<any> {
+    const start = Date.now();
+    this.logger.log('Joke(JsonOutput) start', { op: 'joke:jsonOutput', topic });
+
     try {
-      console.log(`🎭 AppService: Generating joke with JsonOutputParser about ${topic}...`);
       const result = await this.jokeJsonOutputService.tellJoke(topic);
-      console.log('✅ AppService: JsonOutputParser joke generation completed');
+      this.logger.log('Joke(JsonOutput) success', { op: 'joke:jsonOutput', ms: Date.now() - start });
       return result;
-    } catch (error) {
-      console.error('❌ AppService: Error generating JsonOutputParser joke:', error);
+    } catch (error: any) {
+      this.logger.error('Joke(JsonOutput) failed', error?.stack, 'tellJokeWithJsonOutput');
+      this.logger.warn('Joke(JsonOutput) failure timing', { op: 'joke:jsonOutput', ms: Date.now() - start });
       throw error;
     }
   }
 
-  // Method to test JsonOutputToolsParser service
+  // JsonOutputToolsParser
   async tellJokeWithToolsParser(topic: string): Promise<any> {
+    const start = Date.now();
+    this.logger.log('Joke(ToolsParser) start', { op: 'joke:toolsParser', topic });
+
     try {
-      console.log(`🔧 AppService: Generating joke with JsonOutputToolsParser about ${topic}...`);
       const result = await this.jokeToolsService.tellJoke(topic);
-      console.log('✅ AppService: JsonOutputToolsParser joke generation completed');
+      this.logger.log('Joke(ToolsParser) success', { op: 'joke:toolsParser', ms: Date.now() - start });
       return result;
-    } catch (error) {
-      console.error('❌ AppService: Error generating JsonOutputToolsParser joke:', error);
+    } catch (error: any) {
+      this.logger.error('Joke(ToolsParser) failed', error?.stack, 'tellJokeWithToolsParser');
+      this.logger.warn('Joke(ToolsParser) failure timing', { op: 'joke:toolsParser', ms: Date.now() - start });
       throw error;
     }
   }
 
-  // Method to test JsonOutputKeyToolsParser service
+  // JsonOutputKeyToolsParser
   async tellJokeWithKeyToolsParser(topic: string): Promise<any> {
+    const start = Date.now();
+    this.logger.log('Joke(KeyToolsParser) start', { op: 'joke:keyToolsParser', topic });
+
     try {
-      console.log(`🔑 AppService: Generating joke with JsonOutputKeyToolsParser about ${topic}...`);
       const result = await this.jokeKeyToolsService.tellJoke(topic);
-      console.log('✅ AppService: JsonOutputKeyToolsParser joke generation completed');
+      this.logger.log('Joke(KeyToolsParser) success', { op: 'joke:keyToolsParser', ms: Date.now() - start });
       return result;
-    } catch (error) {
-      console.error('❌ AppService: Error generating JsonOutputKeyToolsParser joke:', error);
+    } catch (error: any) {
+      this.logger.error('Joke(KeyToolsParser) failed', error?.stack, 'tellJokeWithKeyToolsParser');
+      this.logger.warn('Joke(KeyToolsParser) failure timing', { op: 'joke:keyToolsParser', ms: Date.now() - start });
       throw error;
     }
   }
 
-  // Convenience method to test all three parsers at once
+  // Run all three parsers
   async testAllJokeServices(topic: string): Promise<any> {
+    const start = Date.now();
+    this.logger.log('Joke(All) start', { op: 'joke:all', topic });
+
     try {
-      console.log(`🎪 AppService: Testing all joke services with topic: ${topic}`);
-      
       const [jsonOutput, toolsParser, keyToolsParser] = await Promise.all([
         this.tellJokeWithJsonOutput(topic),
         this.tellJokeWithToolsParser(topic),
@@ -90,10 +111,11 @@ export class AppService {
         jsonOutputKeyToolsParser: keyToolsParser,
       };
 
-      console.log('🎉 AppService: All joke services tested successfully');
+      this.logger.log('Joke(All) success', { op: 'joke:all', ms: Date.now() - start });
       return results;
-    } catch (error) {
-      console.error('❌ AppService: Error testing joke services:', error);
+    } catch (error: any) {
+      this.logger.error('Joke(All) failed', error?.stack, 'testAllJokeServices');
+      this.logger.warn('Joke(All) failure timing', { op: 'joke:all', ms: Date.now() - start });
       throw error;
     }
   }

@@ -1,0 +1,243 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.RegistryService = void 0;
+const mcp_js_1 = require("@modelcontextprotocol/sdk/server/mcp.js");
+const common_1 = require("@nestjs/common");
+const core_1 = require("@nestjs/core");
+const classes_1 = require("../classes");
+const decorators_1 = require("../decorators");
+const discovery_service_1 = require("./discovery.service");
+const logger_service_1 = require("./logger.service");
+const session_manager_1 = require("./session.manager");
+let RegistryService = class RegistryService {
+    discoveryService;
+    logger;
+    reflector;
+    sessionManager;
+    constructor(discoveryService, logger, reflector, sessionManager) {
+        this.discoveryService = discoveryService;
+        this.logger = logger;
+        this.reflector = reflector;
+        this.sessionManager = sessionManager;
+    }
+    async registerAll(server) {
+        this.logger.log('Starting registration of all MCP capabilities...', 'registry');
+        await Promise.all([
+            this.registerResources(server),
+            this.registerPrompts(server),
+            this.registerTools(server),
+        ]);
+    }
+    getDecoratorType(method) {
+        if (!method)
+            return null;
+        if (this.reflector.get(decorators_1.MCP_TOOL, method))
+            return 'TOOL';
+        if (this.reflector.get(decorators_1.MCP_PROMPT, method))
+            return 'PROMPT';
+        if (this.reflector.get(decorators_1.MCP_RESOURCE, method))
+            return 'RESOURCE';
+        return null;
+    }
+    getHandlerArgs(method, args) {
+        if (!method)
+            throw new Error('Method not found');
+        switch (this.getDecoratorType(method)) {
+            case 'RESOURCE':
+                return args[0] instanceof URL
+                    ? classes_1.ResourceUriHandlerArgs.from(args[0], args[1])
+                    : classes_1.ResourceTemplateHandlerArgs.from(args[0], args[2], args[1]);
+            case 'PROMPT':
+                return args.length === 1
+                    ? classes_1.PromptHandlerArgs.from(args[0])
+                    : classes_1.PromptHandlerArgs.from(args[1], args[0]);
+            case 'TOOL':
+                return args.length === 1
+                    ? classes_1.ToolHandlerArgs.from(args[0])
+                    : classes_1.ToolHandlerArgs.from(args[1], args[0]);
+            default:
+                throw new Error(`Unknown decorator type for method ${method.name}`);
+        }
+    }
+    runGuards(instance, methodName, sessionId, request, args) {
+        const classConstructor = instance.constructor;
+        const classGuards = Reflect.getMetadata(decorators_1.MCP_GUARDS, classConstructor) || [];
+        const prototype = Object.getPrototypeOf(instance);
+        const methodKey = prototype[methodName];
+        const methodGuards = (methodKey &&
+            Reflect.getMetadata(decorators_1.MCP_GUARDS, methodKey)) ||
+            [];
+        const allGuards = [...classGuards, ...methodGuards];
+        if (!allGuards.length)
+            return Promise.resolve();
+        const handlerArgs = this.getHandlerArgs(methodKey, args);
+        const context = {
+            args: handlerArgs,
+            getType: () => 'mcp',
+            getClass: () => instance.constructor,
+            getArgs: () => args,
+            getArgByIndex: (index) => args[index],
+            getSessionId: () => sessionId,
+            getHandler: () => methodKey,
+            switchToHttp: () => ({
+                getRequest: () => request,
+                getResponse: () => {
+                    throw new Error('Response not available in MCP context');
+                },
+                getNext: () => {
+                    throw new Error('Next not available in MCP context');
+                },
+            }),
+        };
+        return (async () => {
+            for (const Guard of allGuards) {
+                const guardInstance = typeof Guard === 'function' ? new Guard() : Guard;
+                const allowed = await guardInstance.canActivate(context);
+                if (!allowed)
+                    throw new Error(`Access denied by guard on ${methodName}`);
+            }
+        })();
+    }
+    async wrappedHandler(instance, handler, args) {
+        const isResolver = Reflect.hasMetadata(decorators_1.MCP_RESOLVER, instance.constructor);
+        if (!isResolver) {
+            throw new Error(`Class "${instance.constructor.name}" must be decorated with @Resolver to use @Prompt, @Tool, or @Resource.`);
+        }
+        const methodName = handler.name;
+        const { sessionId } = args[args.length - 1];
+        if (!sessionId) {
+            throw new common_1.UnauthorizedException('Session ID is required');
+        }
+        const session = this.sessionManager.getSession(sessionId);
+        if (!session) {
+            throw new common_1.ForbiddenException('Session not found');
+        }
+        args[args.length - 1] = {
+            ...args[args.length - 1],
+            headers: session.request.headers,
+            body: session.request.body,
+        };
+        await this.runGuards(instance, methodName, sessionId, session.request, args);
+        return handler(...args);
+    }
+    registerResources(server) {
+        const resourceMethods = this.discoveryService.getAllMethodsWithMetadata(decorators_1.MCP_RESOURCE);
+        for (const method of resourceMethods) {
+            const { metadata, handler, instance } = method;
+            this.logger.log(`Resource "${metadata?.name || 'unnamed'}" found.`, 'resources');
+            const wrappedHandler = (...args) => this.wrappedHandler(instance, handler, args);
+            try {
+                if ('template' in metadata) {
+                    if ('metadata' in metadata) {
+                        server.resource(metadata.name, new mcp_js_1.ResourceTemplate(metadata.template, { list: undefined }), metadata.metadata, wrappedHandler);
+                    }
+                    else {
+                        server.resource(metadata.name, new mcp_js_1.ResourceTemplate(metadata.template, { list: undefined }), wrappedHandler);
+                    }
+                }
+                else if ('uri' in metadata) {
+                    if ('metadata' in metadata) {
+                        server.resource(metadata.name, metadata.uri, metadata.metadata, wrappedHandler);
+                    }
+                    else {
+                        server.resource(metadata.name, metadata.uri, wrappedHandler);
+                    }
+                }
+            }
+            catch (error) {
+                this.logger.error(`Error registering resource ${metadata.name}: ${error}`, undefined, 'resources');
+                if (error && typeof error === 'object' && 'stack' in error) {
+                    this.logger.error(`Error stack: ${error.stack}`, undefined, 'resources');
+                }
+            }
+        }
+    }
+    registerPrompts(server) {
+        const promptMethods = this.discoveryService.getAllMethodsWithMetadata(decorators_1.MCP_PROMPT);
+        for (const method of promptMethods) {
+            const { metadata, handler, instance } = method;
+            this.logger.log(`Prompt "${metadata?.name || 'unnamed'}" found.`, 'prompts');
+            const wrappedHandler = (...args) => this.wrappedHandler(instance, handler, args);
+            try {
+                if ('description' in metadata && 'argsSchema' in metadata) {
+                    server.prompt(metadata.name, metadata.description, metadata.argsSchema, wrappedHandler);
+                }
+                else if ('argsSchema' in metadata) {
+                    server.prompt(metadata.name, metadata.argsSchema, wrappedHandler);
+                }
+                else if ('description' in metadata) {
+                    server.prompt(metadata.name, metadata.description, wrappedHandler);
+                }
+                else {
+                    server.prompt(metadata.name, wrappedHandler);
+                }
+            }
+            catch (error) {
+                this.logger.error(`Error registering prompt ${metadata.name}: ${error}`, undefined, 'prompts');
+                if (error && typeof error === 'object' && 'stack' in error) {
+                    this.logger.error(`Error stack: ${error.stack}`, undefined, 'prompts');
+                }
+            }
+        }
+    }
+    registerTools(server) {
+        const toolMethods = this.discoveryService.getAllMethodsWithMetadata(decorators_1.MCP_TOOL);
+        for (const method of toolMethods) {
+            const { metadata, handler, instance } = method;
+            this.logger.log(`Tool "${metadata?.name || 'unnamed'}" found.`, 'tools');
+            const wrappedHandler = (...args) => this.wrappedHandler(instance, handler, args);
+            try {
+                if ('paramsSchema' in metadata &&
+                    'annotations' in metadata &&
+                    'description' in metadata) {
+                    server.tool(metadata.name, metadata.description, metadata.paramsSchema, metadata.annotations, wrappedHandler);
+                }
+                else if ('paramsSchema' in metadata && 'annotations' in metadata) {
+                    server.tool(metadata.name, metadata.paramsSchema, metadata.annotations, wrappedHandler);
+                }
+                else if ('paramsSchema' in metadata && 'description' in metadata) {
+                    server.tool(metadata.name, metadata.description, metadata.paramsSchema, wrappedHandler);
+                }
+                else if ('annotations' in metadata && 'description' in metadata) {
+                    server.tool(metadata.name, metadata.description, metadata.annotations, wrappedHandler);
+                }
+                else if ('paramsSchema' in metadata) {
+                    server.tool(metadata.name, metadata.paramsSchema, wrappedHandler);
+                }
+                else if ('annotations' in metadata) {
+                    server.tool(metadata.name, metadata.annotations, wrappedHandler);
+                }
+                else if ('description' in metadata) {
+                    server.tool(metadata.name, metadata.description, wrappedHandler);
+                }
+                else {
+                    server.tool(metadata.name, wrappedHandler);
+                }
+            }
+            catch (error) {
+                this.logger.error(`Error registering tool ${metadata.name}: ${error}`, undefined, 'tools');
+                if (error && typeof error === 'object' && 'stack' in error) {
+                    this.logger.error(`Stack trace: ${error.stack}`, undefined, 'tools');
+                }
+            }
+        }
+    }
+};
+exports.RegistryService = RegistryService;
+exports.RegistryService = RegistryService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [discovery_service_1.DiscoveryService,
+        logger_service_1.McpLoggerService,
+        core_1.Reflector,
+        session_manager_1.SessionManager])
+], RegistryService);
+//# sourceMappingURL=registry.service.js.map

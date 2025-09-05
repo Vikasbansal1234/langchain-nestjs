@@ -1,0 +1,97 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.McpLoggerService = void 0;
+const common_1 = require("@nestjs/common");
+let McpLoggerService = class McpLoggerService {
+    logger;
+    options;
+    constructor(options) {
+        this.options = {
+            enabled: options?.enabled !== false,
+            level: options?.level || 'verbose',
+        };
+        this.logger = new common_1.Logger('MCP');
+    }
+    debug(message, context) {
+        if (!this.options.enabled ||
+            this.getLevelValue(this.options.level) > this.getLevelValue('debug')) {
+            return;
+        }
+        const formattedContext = this.formatContext(context);
+        this.logger.debug(message, formattedContext);
+    }
+    verbose(message, context) {
+        if (!this.options.enabled ||
+            this.getLevelValue(this.options.level) > this.getLevelValue('verbose')) {
+            return;
+        }
+        const formattedContext = this.formatContext(context);
+        this.logger.verbose(message, formattedContext);
+    }
+    log(message, context) {
+        if (!this.options.enabled ||
+            this.getLevelValue(this.options.level) > this.getLevelValue('log')) {
+            return;
+        }
+        const formattedContext = this.formatContext(context);
+        this.logger.log(message, formattedContext);
+    }
+    warn(message, context) {
+        if (!this.options.enabled ||
+            this.getLevelValue(this.options.level) > this.getLevelValue('warn')) {
+            return;
+        }
+        const formattedContext = this.formatContext(context);
+        this.logger.warn(message, formattedContext);
+    }
+    error(message, trace, context) {
+        if (!this.options.enabled ||
+            this.getLevelValue(this.options.level) > this.getLevelValue('error')) {
+            return;
+        }
+        const formattedContext = this.formatContext(context);
+        this.logger.error(message, trace, formattedContext);
+    }
+    isEnabled() {
+        return this.options.enabled;
+    }
+    getLevel() {
+        return this.options.level;
+    }
+    formatContext(context) {
+        if (!context) {
+            return '@mcp';
+        }
+        return `@mcp:${context}`;
+    }
+    getLevelValue(level) {
+        const levels = {
+            debug: 0,
+            verbose: 1,
+            log: 2,
+            warn: 3,
+            error: 4,
+        };
+        return levels[level] ?? 2;
+    }
+};
+exports.McpLoggerService = McpLoggerService;
+exports.McpLoggerService = McpLoggerService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, common_1.Optional)()),
+    __param(0, (0, common_1.Inject)('MCP_LOGGING_OPTIONS')),
+    __metadata("design:paramtypes", [Object])
+], McpLoggerService);
+//# sourceMappingURL=logger.service.js.map

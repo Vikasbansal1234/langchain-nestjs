@@ -1,0 +1,14 @@
+import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse';
+import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { Request } from 'express';
+type Session = {
+    transport: StreamableHTTPServerTransport | SSEServerTransport;
+    request: Request;
+};
+export declare class SessionManager {
+    private sessions;
+    getSession(sessionId: string): Session | undefined;
+    setSession(sessionId: string, session: Session): void;
+    deleteSession(sessionId: string): void;
+}
+export {};

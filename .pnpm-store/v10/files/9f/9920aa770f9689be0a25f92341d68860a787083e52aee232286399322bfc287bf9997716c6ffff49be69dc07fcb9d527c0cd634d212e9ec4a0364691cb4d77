@@ -1,0 +1,85 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DiscoveryService = void 0;
+const common_1 = require("@nestjs/common");
+const core_1 = require("@nestjs/core");
+let DiscoveryService = class DiscoveryService {
+    discoveryService;
+    metadataScanner;
+    reflector;
+    constructor(discoveryService, metadataScanner, reflector) {
+        this.discoveryService = discoveryService;
+        this.metadataScanner = metadataScanner;
+        this.reflector = reflector;
+    }
+    getAllMethodsWithMetadata(metadataKey) {
+        const providers = this.discoveryService.getProviders();
+        const result = [];
+        for (const provider of providers) {
+            if (!provider.instance) {
+                continue;
+            }
+            const methods = this.getMethodsWithMetadataFromProvider(provider, metadataKey);
+            if (methods.length > 0) {
+                result.push(...methods);
+            }
+        }
+        return result;
+    }
+    getMethodsWithMetadataFromProvider(provider, metadataKey) {
+        if (!provider.instance) {
+            return [];
+        }
+        const instance = provider.instance;
+        const instancePrototype = Object.getPrototypeOf(instance);
+        if (!instancePrototype) {
+            return [];
+        }
+        const methodNames = this.metadataScanner.getAllMethodNames(instancePrototype);
+        const result = [];
+        for (const methodName of methodNames) {
+            const methodFunction = instancePrototype[methodName];
+            if (typeof methodFunction !== 'function') {
+                continue;
+            }
+            const metadata = this.reflector.get(metadataKey, methodFunction);
+            if (metadata) {
+                const handlerProperty = instance[methodName];
+                if (typeof handlerProperty !== 'function') {
+                    continue;
+                }
+                const handler = ((...args) => {
+                    return handlerProperty.apply(instance, args);
+                });
+                Object.defineProperty(handler, 'name', {
+                    value: methodName,
+                    writable: false,
+                });
+                result.push({
+                    method: methodName,
+                    metadata: metadata,
+                    handler,
+                    instance,
+                });
+            }
+        }
+        return result;
+    }
+};
+exports.DiscoveryService = DiscoveryService;
+exports.DiscoveryService = DiscoveryService = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [core_1.DiscoveryService,
+        core_1.MetadataScanner,
+        core_1.Reflector])
+], DiscoveryService);
+//# sourceMappingURL=discovery.service.js.map

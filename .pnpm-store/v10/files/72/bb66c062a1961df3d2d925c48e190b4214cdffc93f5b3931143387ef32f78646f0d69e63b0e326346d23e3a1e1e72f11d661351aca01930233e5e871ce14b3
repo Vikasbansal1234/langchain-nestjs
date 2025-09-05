@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.ToolHandlerArgs = void 0;
+class ToolHandlerArgs {
+    args;
+    extra;
+    constructor(extra, args) {
+        this.extra = extra;
+        this.args = args;
+    }
+    static from(extra, args) {
+        return new ToolHandlerArgs(extra, args);
+    }
+}
+exports.ToolHandlerArgs = ToolHandlerArgs;
+//# sourceMappingURL=tool.args.js.map

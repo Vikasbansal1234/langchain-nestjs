@@ -1,0 +1,16 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.MCP_TOOL = void 0;
+exports.Tool = Tool;
+const common_1 = require("@nestjs/common");
+exports.MCP_TOOL = '__mcp_tool__';
+function Tool(options) {
+    return function (target, propertyKey, descriptor) {
+        (0, common_1.SetMetadata)(exports.MCP_TOOL, {
+            ...options,
+            methodName: propertyKey,
+        })(target, propertyKey, descriptor);
+        return descriptor;
+    };
+}
+//# sourceMappingURL=tool.decorator.js.map

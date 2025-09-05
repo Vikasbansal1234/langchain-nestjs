@@ -1,0 +1,16 @@
+import { MetadataScanner, DiscoveryService as NestDiscoveryService, Reflector } from '@nestjs/core';
+import { InstanceWrapper } from '@nestjs/core/injector/instance-wrapper';
+export interface MethodWithMetadata<T = unknown> {
+    method: string;
+    metadata: T;
+    handler: (...args: any[]) => any;
+    instance: object;
+}
+export declare class DiscoveryService {
+    private readonly discoveryService;
+    private readonly metadataScanner;
+    private readonly reflector;
+    constructor(discoveryService: NestDiscoveryService, metadataScanner: MetadataScanner, reflector: Reflector);
+    getAllMethodsWithMetadata<T = unknown>(metadataKey: string): MethodWithMetadata<T>[];
+    getMethodsWithMetadataFromProvider<T = unknown>(provider: InstanceWrapper, metadataKey: string): MethodWithMetadata<T>[];
+}

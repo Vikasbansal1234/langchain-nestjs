@@ -1,0 +1,70 @@
+[
+  {
+    "type": "HumanMessage",
+    "kwargs": {
+      "content": "What is the weather in Delhi?"
+    }
+  },
+  {
+    "type": "HumanMessage",
+    "kwargs": {
+      "content": "Add 10 and 15."
+    }
+  },
+  {
+    "type": "HumanMessage",
+    "kwargs": {
+      "content": "What time is it right now?"
+    }
+  },
+  {
+    "type": "AIMessage",
+    "tool_calls": [
+      {
+        "name": "get_weather",
+        "args": {
+          "location": "Delhi"
+        },
+        "type": "tool_call",
+        "id": "call_IAnjFAFjX2PxIDyxUIvKyUnB"
+      },
+      {
+        "name": "add_numbers",
+        "args": {
+          "a": 10,
+          "b": 15
+        },
+        "type": "tool_call",
+        "id": "call_WGXDUW711gBYZmGXLX62jwcQ"
+      },
+      {
+        "name": "get_time",
+        "args": {},
+        "type": "tool_call",
+        "id": "call_dTnA0bBPSxQ3pNoLhzjhEvqE"
+      }
+    ]
+  },
+  {
+    "type": "ToolMessage",
+    "kwargs": {
+      "content": "Mock weather in Delhi: sunny, 25°C."
+    }
+  },
+  {
+    "type": "ToolMessage",
+    "kwargs": {
+      "content": "The sum of 10 + 15 = 25"
+    }
+  },
+  {
+    "type": "ToolMessage",
+    "kwargs": {
+      "content": "Current time is 2025-08-27T14:08:24.632Z"
+    }
+  },
+  {
+    "type": "AIMessage",
+    "tool_calls": []
+  }
+]

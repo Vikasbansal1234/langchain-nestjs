@@ -1,0 +1,9 @@
+import { Request, Response } from 'express';
+import { StreamableService } from './streamable.service';
+export declare class StreamableController {
+    private readonly service;
+    constructor(service: StreamableService);
+    handleMcpPost(req: Request, res: Response): Promise<void>;
+    handleMcpGet(req: Request, res: Response): Promise<void>;
+    handleMcpDelete(req: Request, res: Response): Promise<void>;
+}

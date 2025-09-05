@@ -1,0 +1,40 @@
+"use strict";
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var McpModule_1;
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.McpModule = void 0;
+const common_1 = require("@nestjs/common");
+const mcp_core_module_1 = require("./mcp-core.module");
+let McpModule = McpModule_1 = class McpModule {
+    static forRoot(options) {
+        return {
+            module: McpModule_1,
+            imports: [mcp_core_module_1.McpCoreModule.forRoot(options)],
+        };
+    }
+    static forRootAsync(options) {
+        return {
+            module: McpModule_1,
+            imports: [mcp_core_module_1.McpCoreModule.forRootAsync(options)],
+        };
+    }
+    static forFeature(options) {
+        const coreFeatureModule = mcp_core_module_1.McpCoreModule.forFeature(options);
+        return {
+            module: McpModule_1,
+            imports: coreFeatureModule.imports ?? [],
+            providers: coreFeatureModule.providers,
+            exports: coreFeatureModule.exports,
+        };
+    }
+};
+exports.McpModule = McpModule;
+exports.McpModule = McpModule = McpModule_1 = __decorate([
+    (0, common_1.Module)({})
+], McpModule);
+//# sourceMappingURL=mcp.module.js.map
