@@ -1,80 +1,284 @@
+# LangChain-NestJS Decorator Framework
 
-# langchain-nestjs
-A production-ready NestJS framework for building LangChain-powered services with multiple output parsers, type-safe schemas, and modular architecture. Features JsonOutputParser, JsonOutputToolsParser, and JsonOutputKeyToolsParser implementations with Zod validation.
+This project demonstrates a **modular, metadata-driven** integration of  
+[LangChainJS](https://js.langchain.com) and [LangGraph](https://github.com/langchain-ai/langgraph)  
+inside a **NestJS** application.
 
-## Description
+All LangChain components (Prompt, Model, Parser, Chain, VectorStore, Retriever, Tool, Agent, Graph)
+are defined via **TypeScript decorators** and automatically **discovered and instantiated** at runtime.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
-
-```bash
-$ pnpm install
-```
-
-## Compile and run the project
+## ⚡ Quick Start
 
 ```bash
-# development
-$ pnpm run start
+npm install
+npm run start:dev
+Make sure you export any required API keys (e.g. OPENAI_API_KEY)
+and run with Node.js 20+.
 
-# watch mode
-$ pnpm run start:dev
+🏗️ Example: Full Service Using Multiple Decorators
+typescript
+Copy code
+// src/app.service.ts
+import { Injectable, Logger } from '@nestjs/common';
+import { z } from 'zod';
+import { Prompt } from './langchain/decorators/prompt.decorator';
+import { Model } from './langchain/decorators/model.decorator';
+import { Parser } from './langchain/decorators/parser.decorator';
+import { Chain } from './langchain/decorators/chain.decorator';
+import { Tool } from './langchain/decorators/tool.decorator';
+import { Agent } from './langchain/decorators/agent.decorator';
+import { Provider, ModelKind } from './langchain/enums/model.enums';
+import { PromptKind } from './langchain/enums/prompt.enums';
+import { ParserKind } from './langchain/enums/parser.enums';
 
-# production mode
-$ pnpm run start:prod
-```
+@Injectable()
+export class AppService {
+  private readonly logger = new Logger(AppService.name);
 
-## Run tests
+  // 1️⃣ Prompt
+  @Prompt({
+    name: 'summaryPrompt',
+    kind: PromptKind.PromptTemplate,
+    template: 'Summarize the following text:\n{text}',
+  })
+  summaryPrompt!: any;
 
+  // 2️⃣ Model
+  @Model({
+    name: 'openaiChat',
+    provider: Provider.OpenAI,
+    kind: ModelKind.Chat,
+    model: 'gpt-4o',
+  })
+  chatModel!: any;
+
+  // 3️⃣ Parser
+  @Parser({
+    name: 'stringParser',
+    kind: ParserKind.String,
+  })
+  stringParser!: any;
+
+  // 4️⃣ Chain (Prompt → Model → Parser)
+  @Chain({
+    name: 'summaryChain',
+    promptRef: 'summaryPrompt',
+    modelRef: 'chatModel',
+    parserRef: 'stringParser',
+  })
+  summaryChain!: any;
+
+  // 5️⃣ Tool
+  @Tool({
+    name: 'get_weather',
+    description: 'Return fake weather for a city',
+    schema: z.object({ city: z.string() }),
+  })
+  async getWeather({ city }: { city: string }) {
+    return `It is always sunny in ${city}!`;
+  }
+
+  // 6️⃣ Agent (ReAct with model + tool)
+  @Agent({
+    name: 'weatherAgent',
+    modelRef: 'chatModel',
+    toolRefs: ['getWeather'],
+    responseFormat: z.object({ forecast: z.string() }),
+  })
+  weatherAgent!: any;
+
+  async summarize(text: string) {
+    return this.summaryChain.invoke({ text });
+  }
+
+  async forecast(city: string) {
+    const result = await this.weatherAgent.invoke({
+      messages: [{ role: 'user', content: `Weather in ${city}?` }],
+    });
+    return result.structuredResponse;
+  }
+}
+💾 Vector Store Example
+typescript
+Copy code
+// src/langchain/examples/vector-example.service.ts
+import { Injectable } from '@nestjs/common';
+import { VectorStore } from '../decorators/vector.decorator';
+import { VectorStoreKind } from '../enums/vector.enums';
+import { Model } from '../decorators/model.decorator';
+import { Provider, ModelKind } from '../enums/model.enums';
+
+@Injectable()
+export class VectorExampleService {
+  // OpenAI embeddings
+  @Model({
+    name: 'openaiEmbeddings',
+    provider: Provider.OpenAI,
+    kind: ModelKind.Embeddings,
+    model: 'text-embedding-3-large',
+  })
+  embeddings!: any;
+
+  // Redis vector store
+  @VectorStore({
+    name: 'redisStore',
+    kind: VectorStoreKind.Redis,
+    indexName: 'langchain-index',
+    embeddingsRef: 'embeddings',
+    clientRef: 'redisClient',
+  })
+  redisVector!: any;
+
+  async addSample() {
+    await this.redisVector.addDocuments([
+      { pageContent: 'Apple is a red fruit.', metadata: { category: 'fruit' } },
+    ]);
+    return 'Document added!';
+  }
+
+  async search(query: string) {
+    return this.redisVector.similaritySearch(query, 2);
+  }
+}
+🌐 Graph Example
+typescript
+Copy code
+// src/langchain/examples/greeting.graph.ts
+import { Injectable } from '@nestjs/common';
+import { BaseMessage, HumanMessage } from '@langchain/core/messages';
+import { Annotation, START } from '@langchain/langgraph';
+import { GraphState } from '../decorators/lcgraph.state.decorator';
+import { GraphNode } from '../decorators/lcgraph.node.decorator';
+import { GraphEdge } from '../decorators/lcgraph.edge.decorator';
+import { GraphDecorator as Graph } from '../decorators/lcgraph.graph.decorator';
+
+@Injectable()
+export class GreetingGraphService {
+  @GraphState({
+    name: 'greetingState',
+    schema: () =>
+      Annotation.Root({
+        messages: Annotation<BaseMessage[]>({
+          reducer: (x, y) => x.concat(y),
+          default: () => [],
+        }),
+        userName: Annotation<string>({
+          reducer: (x, y) => y ?? x,
+          default: () => 'Anonymous',
+        }),
+      }),
+  })
+  state!: any;
+
+  @GraphNode({ name: 'Greeter', sources: [START] })
+  async greeter(state: any) {
+    return { messages: [new HumanMessage({ content: `Hello, ${state.userName}!` })] };
+  }
+
+  @GraphNode({ name: 'Finalizer', sources: ['Greeter'] })
+  async finalizer(state: any) {
+    return { messages: [new HumanMessage({ content: `Goodbye, ${state.userName}!` })] };
+  }
+
+  @GraphEdge({
+    from: 'Greeter',
+    router: () => 'Finalizer',
+    mapping: { Finalizer: 'Finalizer' },
+  })
+  conditional!: any;
+
+  @Graph({ name: 'greetingGraph' })
+  graph!: any;
+}
+🧩 Supported Decorators and Options
+Decorator	Key Config
+@Prompt	name, kind: PromptTemplate | ChatPromptTemplate, template (for PromptTemplate), messages (for ChatPromptTemplate)
+@Model	name, provider: OpenAI | Azure | Groq | Ollama, kind: Chat | Completion | Embeddings, model, temperature?, apiKey?
+@Parser	name, kind: String | JSONKey | CommaSeparated | Structured, keys?, schema?
+@Chain	name, promptRef, modelRef, parserRef?
+@VectorStore	name, kind: Redis | PGVector | MongoDB, indexName, embeddingsRef, clientRef?
+@Retriever	name, kind: MultiQuery | MultiVector | SelfQuery | ParentDocument | ScoreThreshold, vectorStoreRef, llmRef?, promptRef?, parserRef?
+@Tool	name, description, schema
+@Agent	name, modelRef, toolRefs, responseFormat?
+@GraphState	name, schema: () => Annotation.Root(...)
+@GraphNode	name, sources, targets?
+@GraphEdge	from, router, mapping
+@Graph	name
+
+💡 Usage in a Controller
+typescript
+Copy code
+// src/app.controller.ts
+import { Controller, Get, Query } from '@nestjs/common';
+import { AppService } from './app.service';
+import { VectorExampleService } from './langchain/examples/vector-example.service';
+import { GreetingGraphService } from './langchain/examples/greeting.graph';
+
+@Controller()
+export class AppController {
+  constructor(
+    private readonly app: AppService,
+    private readonly vector: VectorExampleService,
+    private readonly graph: GreetingGraphService,
+  ) {}
+
+  @Get('summarize')
+  async summarize(@Query('text') text: string) {
+    return this.app.summarize(text);
+  }
+
+  @Get('forecast')
+  async forecast(@Query('city') city: string) {
+    return this.app.forecast(city);
+  }
+
+  @Get('vector/add')
+  async addDoc() {
+    return this.vector.addSample();
+  }
+
+  @Get('vector/search')
+  async search(@Query('q') q: string) {
+    return this.vector.search(q);
+  }
+
+  @Get('greet')
+  async greet(@Query('name') name: string) {
+    return this.graph.graph.invoke({ userName: name, messages: [] });
+  }
+}
+✅ Development Tips
+Enable experimentalDecorators and emitDecoratorMetadata in tsconfig.json.
+
+Import 'reflect-metadata' once in main.ts before starting the app.
+
+Use environment variables for API keys (OPENAI_API_KEY, etc.).
+
+License
+MIT
+
+yaml
+Copy code
+
+---
+
+### ✔️ Commit Instructions
+
+1. Save the above content into `README.md` at the **root** of your repository.
+2. Push to GitHub:
 ```bash
-# unit tests
-$ pnpm run test
+git add README.md
+git commit -m "docs: add complete LangChain-NestJS decorator examples"
+git push
+This README now contains actual, working code samples for
+every decorator (Prompt, Model, Parser, Chain, VectorStore, Retriever, Tool, Agent, and Graph)
+so contributors can immediately copy-paste and run them.
 
-# e2e tests
-$ pnpm run test:e2e
 
-# test coverage
-$ pnpm run test:cov
-```
 
-## Deployment
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
 
-```bash
-$ pnpm install -g @nestjs/mau
-$ mau deploy
-```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
->>>>>>> c12a1e4 (Initial commit: LangChain NestJS Services with multiple output parsers)
