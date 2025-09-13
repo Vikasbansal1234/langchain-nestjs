@@ -1,12 +1,17 @@
 /* eslint-disable */
-import { ModelKind, Provider } from "../enums/model.enums";
-import { ChatOpenAIImpl } from "../implementations/models/openai/chat-openai.impl";
-import { IModel, ModelConfig } from "../interfaces/model.interface";
+import { ModelKind, Provider } from '../enums/model.enums';
+import { ChatOpenAIImpl } from '../impl/models/openai/chat-openai.impl';
+import { OpenAIEmbeddingsImpl } from '../impl/models/openai/openai-embeddings.impl';
+import { IModel, ModelConfig } from '../interfaces/model.interface';
 
-
-const registry: Map<Provider, Map<ModelKind, IModel>> = new Map([
-  [Provider.OpenAI, new Map([[ModelKind.Chat, new ChatOpenAIImpl()]])],
-  // Add Azure/Groq providers as needed
+const registry: Map<Provider, Map<ModelKind, IModel>> = new Map<Provider, Map<ModelKind, IModel>>([
+  [
+    Provider.OpenAI,
+    new Map<ModelKind, IModel>([
+      [ModelKind.Chat, new ChatOpenAIImpl()],
+      [ModelKind.Embeddings, new OpenAIEmbeddingsImpl()],
+    ]),
+  ],
 ]);
 
 export class ModelFactory {

@@ -1,22 +1,23 @@
 /* eslint-disable */
 import { VectorStoreKind } from '../enums/vector.enums';
-import { RedisVectorStoreImpl } from '../impl/vectorstores/redis-vector.impl';
 import { IVectorStore, VectorStoreConfig } from '../interfaces/vector.interface';
-// Add PGVectorVectorImpl, MongoDBVectorImpl, etc.
+import { RedisVectorStoreImpl } from '../impl/vectorstores/redis-vector.impl';
 
+// Register available vector store implementations
 const registry: Map<VectorStoreKind, IVectorStore> = new Map([
   [VectorStoreKind.Redis, new RedisVectorStoreImpl()],
 ]);
 
 export class VectorStoreFactory {
-  static create<T>(
+
+  static async create<T>(
     config: VectorStoreConfig,
-    deps: Record<string, any>,
-  ): T {
+    deps: Record<string, any>
+  ): Promise<T> {
     const impl = registry.get(config.kind);
     if (!impl) {
-      throw new Error(`No vector store for kind: ${config.kind}`);
+      throw new Error(`No vector store found for kind: ${config.kind}`);
     }
-    return impl.create(config, deps) as T;
+    return impl.create(config, deps);
   }
 }

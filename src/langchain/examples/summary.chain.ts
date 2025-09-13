@@ -1,52 +1,45 @@
+/* eslint-disable */
 import { Injectable } from '@nestjs/common';
-import { LC } from '../decorators/lc.decorator';
-import {
-  Provider,
-  ModelKind,
-  PromptKind,
-  ParserKind,
-} from '../enums/lc.enums';
-import { z } from 'zod';
-import { Runnable, RunnableConfig } from "@langchain/core/runnables";
+import { Chain } from '../decorators/chain.decorator';
+import { Model } from '../decorators/model.decorator';
+import { Prompt } from '../decorators/prompt.decorator';
+import { Parser } from '../decorators/parser.decorator';
+import { Provider, ModelKind } from '../enums/model.enums';
+import { PromptKind } from '../enums/prompt.enums';
+import { ParserKind } from '../enums/parser.enums';
 
 @Injectable()
-export class SummaryChain extends Runnable {
-  invoke(input: any, options?: Partial<RunnableConfig<Record<string, any>>> | undefined): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-  lc_namespace: string[];
-  @LC.Model({
-    provider: Provider.OpenAI,
-    kind: ModelKind.Chat,
-    model: 'gpt-4o',
-    temperature: 0.3,
-  })
-  chatModel!: any;
-
-  @LC.Prompt({
-    kind: PromptKind.Chat,
-    template: 'Summarize the following text and return the result as JSON with this exact format: {{"summary": "your summary here", "keywords": ["keyword1", "keyword2", "keyword3"]}}\n\nText to summarize:\n{text}\n\nJSON Response:',
+export class SummaryChain {
+  // 1️⃣ Register a prompt
+  @Prompt({
+    name: 'summaryPrompt',
+    kind: PromptKind.PromptTemplate,
+    template: 'Summarize the following text in one sentence:\n{text}',
+    inputVariables: ['text'],
   })
   summaryPrompt!: any;
 
-  @LC.Parser({
-    kind: ParserKind.Structured,
-    zodFactory: () =>
-      z.object({
-        summary: z.string(),
-        keywords: z.array(z.string()).min(1).max(5),
-      }),
+  // 2️⃣ Register a model
+  @Model({
+    name: 'openaiChat',
+    provider: Provider.OpenAI,
+    kind: ModelKind.Chat,
+    model: 'gpt-4o',
   })
-  outputParser!: any;
+  chatModel!: any;
 
-  @LC.Chain({
-    modelKey: 'chatModel',
-    promptKey: 'summaryPrompt',
-    parserKey: 'outputParser',
+
+
+  // 4️⃣ Create a chain: prompt → model → parser
+  @Chain({
+    name: 'summaryChain',
+    modelRef: 'chatModel',
+    promptRef: 'summaryPrompt',
   })
   chain!: any;
 
-  async summarize(text: string) {
-    return await this.chain.invoke({ text });
+  async run(text: string) {
+    // The chain behaves like a Runnable
+    return this.chain.invoke({ text });
   }
 }

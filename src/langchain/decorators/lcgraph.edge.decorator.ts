@@ -10,23 +10,11 @@ export interface EdgeConfig {
 
 type EdgeMeta = { config: EdgeConfig; method: Function };
 
-export function GraphEdge(config: EdgeConfig): MethodDecorator {
-  return (target: object, propertyKey: string | symbol, descriptor: PropertyDescriptor) => {
+export function GraphEdge(config: EdgeConfig): PropertyDecorator {
+  return (target: object, propertyKey: string | symbol): void => {
     const existing =
-      (Reflect.getOwnMetadata(
-        EDGE_METADATA_KEY,
-        (target as any).constructor,
-      ) as EdgeMeta[] | undefined) ?? [];
-
-    const updated: EdgeMeta[] = [
-      ...existing,
-      { config, method: descriptor.value },
-    ];
-
-    Reflect.defineMetadata(
-      EDGE_METADATA_KEY,
-      updated,
-      (target as any).constructor,
-    );
+      (Reflect.getOwnMetadata(EDGE_METADATA_KEY, target.constructor) as any[]) ?? [];
+    existing.push({ propertyKey, config });
+    Reflect.defineMetadata(EDGE_METADATA_KEY, existing, target.constructor);
   };
 }

@@ -8,7 +8,7 @@ export interface GraphConfig {
 
 type GraphMeta = { propertyKey: string | symbol; config: GraphConfig };
 
-export function Graph(config: GraphConfig): PropertyDecorator {
+export function GraphDecorator(config: GraphConfig): PropertyDecorator {
   return (target: object, propertyKey: string | symbol) => {
     Reflect.defineMetadata(
       GRAPH_METADATA_KEY,
