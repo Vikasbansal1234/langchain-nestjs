@@ -18,8 +18,7 @@ Make sure you export any required API keys (e.g. OPENAI_API_KEY)
 and run with Node.js 20+.
 
 🏗️ Example: Full Service Using Multiple Decorators
-typescript
-Copy code
+code
 // src/app.service.ts
 import { Injectable, Logger } from '@nestjs/common';
 import { z } from 'zod';
@@ -101,8 +100,7 @@ export class AppService {
   }
 }
 💾 Vector Store Example
-typescript
-Copy code
+code
 // src/langchain/examples/vector-example.service.ts
 import { Injectable } from '@nestjs/common';
 import { VectorStore } from '../decorators/vector.decorator';
@@ -143,8 +141,7 @@ export class VectorExampleService {
   }
 }
 🌐 Graph Example
-typescript
-Copy code
+code
 // src/langchain/examples/greeting.graph.ts
 import { Injectable } from '@nestjs/common';
 import { BaseMessage, HumanMessage } from '@langchain/core/messages';
@@ -208,8 +205,7 @@ Decorator	Key Config
 @Graph	name
 
 💡 Usage in a Controller
-typescript
-Copy code
+code
 // src/app.controller.ts
 import { Controller, Get, Query } from '@nestjs/common';
 import { AppService } from './app.service';
