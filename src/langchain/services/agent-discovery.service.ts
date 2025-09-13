@@ -1,17 +1,20 @@
 /* eslint-disable */
+// src/langchain/services/agent-discovery.service.ts
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { DiscoveryService } from '@nestjs/core';
-import { AGENT_METADATA_KEY } from '../constants';
+
+import { ToolFactory } from '../factories/tool.factory';
 import { AgentFactory } from '../factories/agent.factory';
-import { AgentConfig } from '../interfaces/agent.interface';
-
-
-type AgentMeta = { propertyKey: string | symbol; config: AgentConfig };
+import { TOOL_METADATA_KEY, AGENT_METADATA_KEY } from '../constants';
 
 @Injectable()
 export class AgentDiscoveryService implements OnModuleInit {
-  private readonly registry: Record<string, any> = {};
   constructor(private readonly discovery: DiscoveryService) {}
+
+  private readonly registry = {
+    tools: {} as Record<string, any>,
+    agents: {} as Record<string, any>,
+  };
 
   getRegistry() {
     return this.registry;
@@ -19,28 +22,26 @@ export class AgentDiscoveryService implements OnModuleInit {
 
   async onModuleInit() {
     const providers = await this.discovery.getProviders();
+
     for (const wrapper of providers) {
       const instance = wrapper?.instance;
       const metatype = wrapper?.metatype;
       if (!instance || !metatype) continue;
 
-      const metas = Reflect.getOwnMetadata(
-        AGENT_METADATA_KEY,
-        metatype,
-      ) as AgentMeta[] | undefined;
+      // 1️⃣ Discover Tools (create them here)
+      const toolMetas: any[] = Reflect.getOwnMetadata(TOOL_METADATA_KEY, metatype) ?? [];
+      for (const { propertyKey, config, method } of toolMetas) {
+        const tool = ToolFactory.create({ ...config, method });
+        instance[propertyKey] = tool;
+        this.registry.tools[config.name] = tool;
+      }
 
-      if (!metas) continue;
-      for (const { propertyKey, config } of metas) {
-        // resolve model/tools from instance using refs
-        const model = (instance as any)[config.modelRef];
-        const tools = (config.toolRefs ?? []).map(ref => (instance as any)[ref]);
-        const agent = AgentFactory.create(() => ({
-          model,
-          tools,
-          config,
-        }));
-        (instance as any)[propertyKey] = agent;
-        this.registry[config.name] = agent;
+      // 2️⃣ Discover Agents (reuse model reference, DO NOT create model)
+      const agentMetas: any[] = Reflect.getOwnMetadata(AGENT_METADATA_KEY, metatype) ?? [];
+      for (const { propertyKey, config } of agentMetas) {
+        const agent = AgentFactory.create(config, instance); // model is fetched from instance[modelRef]
+        instance[propertyKey] = agent;
+        this.registry.agents[config.name ?? String(propertyKey)] = agent;
       }
     }
   }

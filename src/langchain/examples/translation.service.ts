@@ -17,11 +17,10 @@ export class TranslationService {
     name: 'translatePrompt',
     kind: PromptKind.PromptTemplate,
     template: 'Translate the following sentence to French: {sentence}',
-    inputVariables: ['sentence'],
   })
   translatePrompt!: any; // will be PromptTemplate after discovery
 
-  
+
   @Model({
     name: 'openaiChat',
     provider: Provider.OpenAI,

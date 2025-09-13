@@ -1,8 +1,10 @@
 /* eslint-disable */
 import { ParserKind } from '../enums/parser.enums';
+import { StringOutputParserImpl } from '../impl/parsers/string-output-parser.impl';
 import { IParser, ParserConfig } from '../interfaces/parser.interface';
 
 const registry: Map<ParserKind, IParser> = new Map([
+[ParserKind.String,new StringOutputParserImpl()],   
 ]);
 
 export class ParserFactory {

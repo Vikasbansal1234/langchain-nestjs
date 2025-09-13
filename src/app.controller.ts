@@ -5,12 +5,14 @@ import { TranslationService } from './langchain/examples/translation.service';
 import { GreetingGraphService } from './langchain/examples/greeting.graph';
 import { VectorExampleService } from './langchain/examples/vector-example.service';
 import { SummaryChain } from './langchain/examples/summary.chain';
+import { WeatherAgentService } from './langchain/examples/weather-agent.service';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly translator: TranslationService,
+    private readonly weatherService: WeatherAgentService,
     private readonly summaryChain:SummaryChain,
     private readonly greetingGraphService: GreetingGraphService,
     private readonly vectorService: VectorExampleService, // ✅ new injection
@@ -30,6 +32,16 @@ export class AppController {
     return results;
   }
 
+  @Get()
+  async getHello(@Query('text') text:string){
+    return this.appService.getHello(text);
+  }
+
+  @Get('forecast')
+  async getWeather(@Query('city') city: string) {
+    const output = await this.weatherService.forecast(city);
+    return { city, forecast: output.forecast };
+  }
   /**
    * ➕ Add a sample document to the Redis vector index
    * URL: GET /vector/add
@@ -70,8 +82,6 @@ export class AppController {
       vectorLength: vector.length,
       preview: vector.slice(0, 5), // show first few numbers
     };
-
-
     
   }
 }

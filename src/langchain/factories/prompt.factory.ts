@@ -1,12 +1,12 @@
 /* eslint-disable */
 import { PromptKind } from '../enums/prompt.enums';
+import { ChatPromptTemplateImpl } from '../impl/prompts/chat-prompt-template.impl';
 import { PromptTemplateImpl } from '../impl/prompts/prompt-template.impl';
 import { IPrompt, PromptConfig } from '../interfaces/prompt.interface';
 
-const registry: Map<PromptKind, IPrompt> = new Map([
-  [PromptKind.PromptTemplate, new PromptTemplateImpl()],
-  // Add ChatPromptTemplateImpl, FewShotChatPromptImpl, etc.
-]);
+const registry: Map<PromptKind, IPrompt<any>> = new Map();
+registry.set(PromptKind.PromptTemplate, new PromptTemplateImpl());
+registry.set(PromptKind.ChatPromptTemplate, new ChatPromptTemplateImpl());
 
 export class PromptFactory {
   static create<T>(config: PromptConfig): T {

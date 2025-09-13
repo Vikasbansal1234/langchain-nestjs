@@ -1,13 +1,20 @@
 /* eslint-disable */
-import { TOOL_METADATA_KEY } from '../constants';
+// src/langchain/factories/tool.factory.ts
+import { tool } from '@langchain/core/tools';
+import { ToolConfig } from '../interfaces/tool.interface';
 
-/**
- * ToolFactory is optional because tools are usually just class methods
- * discovered by metadata. If you want to wrap them, you can keep a registry.
- */
 export class ToolFactory {
-  // Example placeholder – can be extended to build tool wrappers
-  static create<T>(method: Function): T {
-    return method as unknown as T;
+  static create(config: ToolConfig & { method: Function }) {
+    // Wrap the user method in an async RunnableFunc
+    const runnable = async (input: unknown) => {
+      // Zod will validate 'input' automatically if schema is provided
+      return config.method(input);
+    };
+
+    return tool(runnable, {
+      name: config.name,
+      description: config.description,
+      schema: config.schema,  // e.g. z.object(...)
+    });
   }
 }

@@ -14,6 +14,7 @@ import { GreetingGraphService } from './examples/greeting.graph';
 import { VectorExampleService } from './examples/vector-example.service';
 import { SummaryChain } from './examples/summary.chain';
 import { ChainDiscoveryService } from './services/chain-discovery.service';
+import { WeatherAgentService } from './examples/weather-agent.service';
 @Module({
   imports: [DiscoveryModule],
   providers: [
@@ -29,6 +30,7 @@ import { ChainDiscoveryService } from './services/chain-discovery.service';
     TranslationService,
     GreetingGraphService,
     VectorExampleService,
+    WeatherAgentService,
     SummaryChain,
   ],
   exports: [
@@ -44,6 +46,7 @@ import { ChainDiscoveryService } from './services/chain-discovery.service';
     TranslationService,
     GreetingGraphService,
     VectorExampleService,
+    WeatherAgentService,
     SummaryChain,
   ],
 })

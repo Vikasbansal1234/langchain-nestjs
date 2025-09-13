@@ -21,7 +21,8 @@ export const STATE_METADATA_KEY = Symbol('lcgraph:state');
 export const NODE_METADATA_KEY = Symbol('lcgraph:node');
 export const EDGE_METADATA_KEY = Symbol('lcgraph:edge');
 export const GRAPH_METADATA_KEY = Symbol('lcgraph:graph');
-export const CHAIN_METADATA_KEY = 'lc:chain:metadata';
+export const CHAIN_METADATA_KEY = Symbol('lc:chain:metadata');
+
 /**
  * ✅ Usage Example
  *

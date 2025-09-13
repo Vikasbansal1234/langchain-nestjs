@@ -3,10 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { Chain } from '../decorators/chain.decorator';
 import { Model } from '../decorators/model.decorator';
 import { Prompt } from '../decorators/prompt.decorator';
-import { Parser } from '../decorators/parser.decorator';
 import { Provider, ModelKind } from '../enums/model.enums';
 import { PromptKind } from '../enums/prompt.enums';
-import { ParserKind } from '../enums/parser.enums';
 
 @Injectable()
 export class SummaryChain {
@@ -15,7 +13,6 @@ export class SummaryChain {
     name: 'summaryPrompt',
     kind: PromptKind.PromptTemplate,
     template: 'Summarize the following text in one sentence:\n{text}',
-    inputVariables: ['text'],
   })
   summaryPrompt!: any;
 
