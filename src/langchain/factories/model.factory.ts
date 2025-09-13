@@ -1,23 +1,22 @@
-import { Provider, ModelKind } from '../enums/lc.enums';
-import { ModelConfig, IModel } from '../interfaces/model.interface';
+/* eslint-disable */
+import { ModelKind, Provider } from "../enums/model.enums";
+import { ChatOpenAIImpl } from "../implementations/models/openai/chat-openai.impl";
+import { IModel, ModelConfig } from "../interfaces/model.interface";
 
-// Implementations
-import { ChatOpenAIImpl } from '../implementations/models/openai/chat-openai.impl';
-import { OpenAIImpl } from '../implementations/models/openai/openai.impl';
-import { OpenAIEmbeddingsImpl } from '../implementations/models/openai/openai-embeddings.impl';
+
+const registry: Map<Provider, Map<ModelKind, IModel>> = new Map([
+  [Provider.OpenAI, new Map([[ModelKind.Chat, new ChatOpenAIImpl()]])],
+  // Add Azure/Groq providers as needed
+]);
 
 export class ModelFactory {
-  private static readonly registry = new Map<Provider, Map<ModelKind, IModel>>([
-    [Provider.OpenAI, new Map<ModelKind, IModel>([
-      [ModelKind.Chat, new ChatOpenAIImpl()],
-      [ModelKind.Completion, new OpenAIImpl()],
-      [ModelKind.Embeddings, new OpenAIEmbeddingsImpl()],
-    ])]
-  ]);
-
   static create<T>(config: ModelConfig): T {
-    const impl = ModelFactory.registry.get(config.provider)?.get(config.kind);
-    if (!impl) throw new Error(`No model found for ${config.provider} / ${config.kind}`);
-    return impl.create(config);
+    const impl = registry.get(config.provider)?.get(config.kind);
+    if (!impl) {
+      throw new Error(
+        `No model implementation for provider=${config.provider} kind=${config.kind}`,
+      );
+    }
+    return impl.create(config) as T;
   }
 }

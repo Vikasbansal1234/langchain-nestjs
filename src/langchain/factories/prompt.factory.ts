@@ -1,19 +1,19 @@
-import { PromptKind } from '../enums/lc.enums';
-import { PromptConfig, IPrompt } from '../interfaces/prompt.interface';
+/* eslint-disable */
+import { PromptKind } from '../enums/prompt.enums';
+import { PromptTemplateImpl } from '../impl/prompts/prompt-template.impl';
+import { IPrompt, PromptConfig } from '../interfaces/prompt.interface';
 
-// Implementations
-import { ChatPromptImpl } from '../implementations/prompts/chat-prompt.impl';
-import { StringPromptImpl } from '../implementations/prompts/string-prompt.impl';
+const registry: Map<PromptKind, IPrompt> = new Map([
+  [PromptKind.PromptTemplate, new PromptTemplateImpl()],
+  // Add ChatPromptTemplateImpl, FewShotChatPromptImpl, etc.
+]);
 
 export class PromptFactory {
-  private static readonly registry = new Map<PromptKind, IPrompt>([
-    [PromptKind.Chat, new ChatPromptImpl()],
-    [PromptKind.String, new StringPromptImpl()],
-  ]);
-
   static create<T>(config: PromptConfig): T {
-    const impl = PromptFactory.registry.get(config.kind);
-    if (!impl) throw new Error(`No prompt found for ${config.kind}`);
-    return impl.create(config);
+    const impl = registry.get(config.kind);
+    if (!impl) {
+      throw new Error(`No prompt implementation for kind: ${config.kind}`);
+    }
+    return impl.create(config) as T;
   }
 }
