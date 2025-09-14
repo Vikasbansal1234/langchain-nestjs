@@ -20,7 +20,7 @@ export class GraphFactory {
     }
 
     for (const e of meta.edges) {
-      graph.addConditionalEdges(e.config.from, e.config.router, e.config.mapping);
+      graph.addConditionalEdges(e.config.from, e.config.method);
     }
 
     if (!meta.nodes.some(n => n.config.sources?.includes(START))) {

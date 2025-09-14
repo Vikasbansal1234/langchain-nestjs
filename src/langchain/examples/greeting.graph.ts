@@ -51,14 +51,6 @@ export class GreetingGraphService {
     };
   }
 
-  // 4️⃣ Conditional edge
-  @GraphEdge({
-    from: 'Greeter',
-    router: () => 'Finalizer',
-    mapping: { Finalizer: 'Finalizer' }, // deterministic edge
-  })
-  conditionalEdge!: any;
-
   // 5️⃣ Attach graph
   @Graph({ name: 'greetingGraph' })
   graph!: any;

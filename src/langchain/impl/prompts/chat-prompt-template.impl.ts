@@ -7,36 +7,32 @@ import {
 } from '@langchain/core/prompts';
 import { IPrompt, PromptConfig } from '../../interfaces/prompt.interface';
 
-/**
- * Chat prompt that combines:
- *  - a system instruction
- *  - a user (human) input
- *  - a placeholder for previous messages
- *
- * Example Template:
- *   System: "You are a helpful assistant."
- *   Human:  "{input}"
- *   History: {messages}
- */
 export class ChatPromptTemplateImpl implements IPrompt<ChatPromptTemplate> {
   create(config: PromptConfig): ChatPromptTemplate {
-    // Expect these optional keys in config.templateVariables if provided:
-    //  - system: string (system message text)
-    //  - human: string (human input template)
-    //  - historyKey?: string (placeholder key, default 'messages')
-    const { templateVariables } = (config as any) ?? {};
-    const systemText =
-      templateVariables?.system ??
-      'You are a helpful assistant. Answer the user clearly.';
-    const humanTemplate =
-      templateVariables?.human ??
-      '{input}';
-    const historyKey = templateVariables?.historyKey ?? 'messages';
+    // --- Mode 1: fromTemplate (single template string) ---
+    if (config.template && (!config.messages || config.messages.length === 0)) {
+      return ChatPromptTemplate.fromTemplate(config.template);
+    }
 
-    return ChatPromptTemplate.fromMessages([
-      SystemMessagePromptTemplate.fromTemplate(systemText),
-      new MessagesPlaceholder(historyKey),
-      HumanMessagePromptTemplate.fromTemplate(humanTemplate),
-    ]);
+    // --- Mode 2: fromMessages (array of message parts) ---
+    if (config.messages && config.messages.length > 0) {
+      const parts = config.messages.map((m) => {
+        if (m instanceof MessagesPlaceholder) return m;
+
+        switch (m.role) {
+          case 'system':
+            return SystemMessagePromptTemplate.fromTemplate(m.template);
+          case 'human':
+            return HumanMessagePromptTemplate.fromTemplate(m.template);
+          default:
+            throw new Error(`Unsupported message role: ${JSON.stringify(m)}`);
+        }
+      });
+      return ChatPromptTemplate.fromMessages(parts);
+    }
+
+    throw new Error(
+      'ChatPromptTemplate requires either a single template or a messages array.'
+    );
   }
 }

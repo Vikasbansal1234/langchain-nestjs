@@ -4,8 +4,6 @@ import { EDGE_METADATA_KEY } from '../constants';
 
 export interface EdgeConfig {
   from: string;
-  router: (state: any) => string;
-  mapping: Record<string, string>;
 }
 
 type EdgeMeta = { config: EdgeConfig; method: Function };

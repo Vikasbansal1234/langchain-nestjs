@@ -189,3 +189,23 @@ export class GreetingGraphService {
   @Graph({ name: 'greetingGraph' })
   graph!: any;
 }
+
+import { MessagesPlaceholder } from '@langchain/core/prompts';
+
+@Prompt({
+  name: 'multiMessagePrompt',
+  kind: PromptKind.ChatPromptTemplate,
+  messages: [
+    { role: 'system', template: 'You are a sarcastic critic.' },
+    new MessagesPlaceholder('history'),
+    { role: 'human', template: 'Critique: {topic}' },
+  ],
+})
+multiMessagePrompt!: ChatPromptTemplate;
+
+@Prompt({
+  name: 'singleTemplatePrompt',
+  kind: PromptKind.ChatPromptTemplate,
+  template: 'You are a witty assistant. Respond to: {question}',
+})
+singleTemplatePrompt!: ChatPromptTemplate;

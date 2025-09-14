@@ -26,8 +26,6 @@ export interface GraphNodeMeta {
 export interface GraphEdgeMeta {
   config: {
     from: string;
-    router: (state: any) => string;
-    mapping: Record<string, string>;
   };
   method: Function;
 }
