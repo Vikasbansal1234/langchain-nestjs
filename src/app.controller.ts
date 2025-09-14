@@ -65,7 +65,8 @@ export class AppController {
 
    @Get('summary')
   async summarize(@Query('text') text: string) {
-    const output = await this.summaryChain.run(text);
+    console.log('########Summary Chain Called');
+    const output = await this.summaryChain.invoke({text});
     return { input: text, summary: output };
   }
 
