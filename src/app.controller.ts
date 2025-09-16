@@ -11,11 +11,8 @@ import { WeatherAgentService } from './langchain/examples/weather-agent.service'
 export class AppController {
   constructor(
     private readonly appService: AppService,
-    private readonly translator: TranslationService,
     private readonly weatherService: WeatherAgentService,
-    private readonly summaryChain:SummaryChain,
     private readonly greetingGraphService: GreetingGraphService,
-    private readonly vectorService: VectorExampleService, // ✅ new injection
   ) {}
 
   /**
@@ -41,48 +38,5 @@ export class AppController {
   async getWeather(@Query('city') city: string) {
     const output = await this.weatherService.forecast(city);
     return { city, forecast: output.forecast };
-  }
-  /**
-   * ➕ Add a sample document to the Redis vector index
-   * URL: GET /vector/add
-   */
-  @Get('vector/add')
-  async addVectorDoc() {
-    const message = await this.vectorService.addSampleDocument();
-    return { status: 'ok', message };
-  }
-
-  /**
-   * 🔎 Search for documents similar to the query text
-   * URL: GET /vector/search?q=Apple
-   */
-  @Get('vector/search')
-  async searchVector(@Query('q') q: string) {
-    if (!q) return { error: 'Query parameter "q" is required' };
-    const results = await this.vectorService.querySimilar(q);
-    return { query: q, results };
-  }
-
-   @Get('summary')
-  async summarize(@Query('text') text: string) {
-    console.log('########Summary Chain Called');
-    const output = await this.summaryChain.invoke({text});
-    return { input: text, summary: output };
-  }
-
-  /**
-   * 🧮 Generate embeddings directly (optional demo)
-   * URL: GET /vector/embed?text=Hello%20world
-   */
-  @Get('vector/embed')
-  async embedVector(@Query('text') text: string) {
-    if (!text) return { error: 'Query parameter "text" is required' };
-    const vector = await this.vectorService.embeddings.embedQuery(text);
-    return {
-      input: text,
-      vectorLength: vector.length,
-      preview: vector.slice(0, 5), // show first few numbers
-    };
-    
   }
 }

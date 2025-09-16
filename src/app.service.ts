@@ -11,40 +11,27 @@ import { ParserKind } from './langchain/enums/parser.enums';
 export class AppService {
   private readonly logger = new Logger(AppService.name);
 
-  constructor() {}
-
-  @Prompt({
-    name: 'summaryPrompt',
-    kind: PromptKind.PromptTemplate,
-    template: 'Provide me information about:\n{text}',
-  })
-  summaryPrompt!: any;
-
-  // 2️⃣ Register a model
-  @Model({
-    name: 'openaiChat',
-    provider: Provider.OpenAI,
-    kind: ModelKind.Chat,
-    model: 'gpt-4o',
-  })
-  chatModel!: any;
-
-  @Parser({
-    name: 'stringParser',
-    kind: ParserKind.String,
-  })
-  stringParser!: any;
+  constructor() { }
 
   // 4️⃣ Create a chain: prompt → model → parser
   @Chain({
-    name: 'summaryChain',
-    modelRef: 'chatModel',
-    promptRef: 'summaryPrompt',
-    parserRef: 'stringParser',
+    name: 'tempChain',
+    model: {
+      name: 'openaiChat',
+      provider: Provider.OpenAI,
+      kind: ModelKind.Chat,
+      model: 'gpt-4o',
+    },
+    prompt: {
+      name: 'summaryPrompt',
+      kind: PromptKind.PromptTemplate,
+      template: 'Provide me All the complete information of this player inning age total worth in json format:\n{text}',
+    }
+
   })
   chain!: any;
 
-  
+
 
   async getHello(text: string) {
     this.logger.log('getHello called');
